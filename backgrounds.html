@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokemon GO Background Viewer</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:#1b1d1f;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;padding:16px}
+  .container{max-width:600px;margin:0 auto}
+  h1{text-align:center;font-size:1.3rem;margin-bottom:16px;color:#fff;letter-spacing:.5px}
+
+  /* Controls */
+  .controls{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .controls input[type="text"]{flex:1;min-width:120px;padding:10px 14px;border-radius:10px;border:1px solid #333;background:#16162a;color:#e0e0e0;font-size:.9rem;outline:none}
+  .controls input[type="text"]:focus{border-color:#7c5cbf}
+  .controls input[type="text"]::placeholder{color:#666}
+  .controls select{flex:2;min-width:180px;padding:10px 14px;border-radius:10px;border:1px solid #333;background:#16162a;color:#e0e0e0;font-size:.9rem;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+  .controls select:focus{border-color:#7c5cbf}
+
+  /* Preview */
+  .preview-area{position:relative;width:100%;height:450px;border-radius:16px;overflow:hidden;background:#111;margin-bottom:12px;display:flex;align-items:center;justify-content:center}
+  .preview-area .bg-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .preview-area .pokemon-sprite{position:relative;z-index:2;max-height:220px;max-width:220px;image-rendering:auto;filter:drop-shadow(0 4px 20px rgba(0,0,0,.6));transition:opacity .2s}
+  .preview-area .loading-text{position:relative;z-index:2;color:#888;font-size:.85rem}
+
+  /* Info row */
+  .info-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 4px}
+  .pokemon-name{font-size:1.15rem;font-weight:700;color:#fff}
+  .pokemon-id{font-size:.8rem;color:#888;margin-left:6px;font-weight:400}
+  .shiny-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+  .shiny-toggle span{font-size:.85rem;color:#aaa}
+  .toggle-track{width:42px;height:24px;border-radius:12px;background:#333;position:relative;transition:background .25s}
+  .toggle-track.active{background:#7c5cbf}
+  .toggle-knob{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  .toggle-track.active .toggle-knob{transform:translateX(18px)}
+
+  /* Pokemon grid */
+  .grid-label{font-size:.8rem;color:#888;margin-bottom:8px;padding:0 4px}
+  .pokemon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-bottom:24px}
+  .pokemon-card{background:#1e1e3a;border-radius:12px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid transparent;transition:border-color .15s,transform .15s;padding:6px}
+  .pokemon-card:hover{border-color:#5a4a8a;transform:scale(1.05)}
+  .pokemon-card.selected{border-color:#9b6dff;box-shadow:0 0 12px rgba(155,109,255,.3)}
+  .pokemon-card img{width:100%;height:100%;object-fit:contain}
+  .pokemon-card .card-name{display:none}
+
+  /* Background count badge */
+  .bg-count{text-align:center;font-size:.75rem;color:#555;margin-top:8px;padding-bottom:16px}
+
+  @media(max-width:400px){
+    .preview-area{height:350px}
+    .preview-area .pokemon-sprite{max-height:170px;max-width:170px}
+    .pokemon-grid{grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:6px}
+    .controls{flex-direction:column}
+    .controls input[type="text"],.controls select{flex:unset;width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Pokemon GO Backgrounds</h1>
+
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="Filter backgrounds...">
+    <select id="bgSelect"></select>
+  </div>
+
+  <div class="preview-area" id="previewArea">
+    <img class="bg-img" id="bgImg" alt="">
+    <img class="pokemon-sprite" id="pokemonSprite" alt="">
+  </div>
+
+  <div class="info-row">
+    <div>
+      <span class="pokemon-name" id="pokemonName">-</span>
+      <span class="pokemon-id" id="pokemonId"></span>
+    </div>
+    <div class="shiny-toggle" id="shinyToggle">
+      <span>Shiny</span>
+      <div class="toggle-track" id="toggleTrack">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-label" id="gridLabel"></div>
+  <div class="pokemon-grid" id="pokemonGrid"></div>
+  <div class="bg-count" id="bgCount"></div>
+</div>
+
+<script>
+const BACKGROUNDS=[{name:'GO Tour Las Vegas',slug:'gotourlasvegas',pokemon:[{id:382,name:'Kyogre'},{id:383,name:'Groudon'}]},{name:'Air Adventures Jeju Island',slug:'airadventuresjejuisland',pokemon:[{id:380,name:'Latias'},{id:381,name:'Latios'}]},{name:'GO Fest Osaka',slug:'gofestosaka',pokemon:[{id:384,name:'Rayquaza'},{id:488,name:'Cresselia'},{id:716,name:'Xerneas'},{id:717,name:'Yveltal'}]},{name:'GO Fest London',slug:'gofestlondon',pokemon:[{id:384,name:'Rayquaza'},{id:488,name:'Cresselia'},{id:716,name:'Xerneas'},{id:717,name:'Yveltal'}]},{name:'GO Fest New York City',slug:'gofestnewyorkcity',pokemon:[{id:384,name:'Rayquaza'},{id:488,name:'Cresselia'},{id:716,name:'Xerneas'},{id:717,name:'Yveltal'}]},{name:'City Safari Seoul',slug:'citysafariseoul',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Barcelona',slug:'citysafaribarcelona',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Mexico City',slug:'citysafarimexicocity',pokemon:[{id:133,name:'Eevee'}]},{name:'GO Tour Los Angeles',slug:'gotourlosangeles',pokemon:[{id:483,name:'Dialga'},{id:484,name:'Palkia'}]},{name:'Air Adventures Bali',slug:'airadventuresbali',pokemon:[{id:380,name:'Latias'},{id:381,name:'Latios'}]},{name:'City Safari Tainan',slug:'citysafaritainan',pokemon:[{id:133,name:'Eevee'}]},{name:'Air Adventures Surabaya',slug:'airadventuressurabaya',pokemon:[{id:380,name:'Latias'},{id:381,name:'Latios'}]},{name:'GO Fest Sendai',slug:'gofestsendai',pokemon:[{id:791,name:'Solgaleo'},{id:792,name:'Lunala'},{id:793,name:'Nihilego'},{id:796,name:'Xurkitree'},{id:798,name:'Kartana'},{id:799,name:'Guzzlord'},{id:800,name:'Necrozma'},{id:805,name:'Stakataka'}]},{name:'GO Fest Madrid',slug:'gofestmadrid',pokemon:[{id:791,name:'Solgaleo'},{id:792,name:'Lunala'},{id:793,name:'Nihilego'},{id:794,name:'Buzzwole'},{id:798,name:'Kartana'},{id:799,name:'Guzzlord'},{id:800,name:'Necrozma'},{id:805,name:'Stakataka'}]},{name:'GO Fest New York City 2024',slug:'gofestnewyorkcity2024',pokemon:[{id:791,name:'Solgaleo'},{id:792,name:'Lunala'},{id:793,name:'Nihilego'},{id:794,name:'Buzzwole'},{id:798,name:'Kartana'},{id:799,name:'Guzzlord'},{id:800,name:'Necrozma'},{id:806,name:'Blacephalon'}]},{name:'2024 Pokemon World Championships',slug:'2024pokemonworldchampionships',pokemon:[{id:25,name:'Pikachu'}]},{name:'Air Adventures Yogyakarta',slug:'airadventuresyogyakarta',pokemon:[{id:380,name:'Latias'},{id:381,name:'Latios'}]},{name:'MLB Marlins',slug:'mlbmarlins',pokemon:[{id:25,name:'Pikachu'}]},{name:'MLB Mariners',slug:'mlbmariners',pokemon:[{id:25,name:'Pikachu'}]},{name:'Air Adventures Jakarta',slug:'airadventuresjakarta',pokemon:[{id:380,name:'Latias'},{id:381,name:'Latios'}]},{name:'Safari Zone Incheon',slug:'safarizoneincheon',pokemon:[{id:25,name:'Pikachu'},{id:672,name:'Skiddo'}]},{name:'GO Wild Area Fukuoka',slug:'gowildareafukuoka',pokemon:[{id:483,name:'Dialga'},{id:484,name:'Palkia'},{id:849,name:'Toxtricity'}]},{name:'City Safari Hong Kong',slug:'citysafarihongkong',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Sao Paulo',slug:'citysafarisaopaulo',pokemon:[{id:133,name:'Eevee'}]},{name:'GO Tour New Taipei City',slug:'gotournewtaipeicity',pokemon:[{id:643,name:'Reshiram'},{id:644,name:'Zekrom'},{id:646,name:'Kyurem'}]},{name:'GO Tour Unova Los Angeles',slug:'gotourunovalosangeles',pokemon:[{id:643,name:'Reshiram'},{id:644,name:'Zekrom'},{id:646,name:'Kyurem'}]},{name:'City Safari Singapore',slug:'citysafarisingapore',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Mumbai',slug:'citysafarimumbai',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Milan',slug:'citysafarimilan',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Santiago',slug:'citysafarisantiago',pokemon:[{id:133,name:'Eevee'}]},{name:'Spring Blossom Festival',slug:'springblossomfestival',pokemon:[{id:25,name:'Pikachu'},{id:585,name:'Deerling'}]},{name:'Expo 2025 - Osaka',slug:'expo2025-osaka',pokemon:[{id:25,name:'Pikachu'}]},{name:'Expo 2025 - Osaka 2',slug:'expo2025-osaka2',pokemon:[{id:1,name:'Bulbasaur'},{id:4,name:'Charmander'},{id:7,name:'Squirtle'}]},{name:'Suita City',slug:'suitacity',pokemon:[{id:25,name:'Pikachu'}]},{name:'GO Fest 2025 Osaka',slug:'gofest2025osaka',pokemon:[{id:812,name:'Rillaboom'},{id:888,name:'Zacian'},{id:889,name:'Zamazenta'}]},{name:'GO Fest 2025 Jersey City',slug:'gofest2025jerseycity',pokemon:[{id:815,name:'Cinderace'},{id:888,name:'Zacian'},{id:889,name:'Zamazenta'}]},{name:'GO Fest 2025 Paris',slug:'gofest2025paris',pokemon:[{id:4,name:'Charmander'},{id:818,name:'Inteleon'},{id:888,name:'Zacian'},{id:889,name:'Zamazenta'}]},{name:'Lotte Giants',slug:'lottegiants',pokemon:[{id:25,name:'Pikachu'}]},{name:'Seattle Mariners',slug:'seattlemariners',pokemon:[{id:25,name:'Pikachu'}]},{name:'Road Trip 2025 Manchester',slug:'roadtrip2025manchester',pokemon:[{id:25,name:'Pikachu'}]},{name:'Miami Marlins',slug:'miamimarlins',pokemon:[{id:25,name:'Pikachu'}]},{name:'Road Trip 2025 London',slug:'roadtrip2025london',pokemon:[{id:25,name:'Pikachu'}]},{name:'Tampa Bay Rays',slug:'tampabayrays',pokemon:[{id:25,name:'Pikachu'}]},{name:'Milwaukee Brewers',slug:'milwaukeebrewers',pokemon:[{id:25,name:'Pikachu'}]},{name:'Road Trip 2025 Paris',slug:'roadtrip2025paris',pokemon:[{id:25,name:'Pikachu'}]},{name:'Jangheung Water Festival',slug:'jangheungwaterfestival',pokemon:[{id:25,name:'Pikachu'},{id:131,name:'Lapras'},{id:585,name:'Deerling'}]},{name:'Road Trip 2025 Valencia',slug:'roadtrip2025valencia',pokemon:[{id:25,name:'Pikachu'}]},{name:'Washington Nationals',slug:'washingtonnationals',pokemon:[{id:25,name:'Pikachu'}]},{name:'Road Trip 2025 Berlin',slug:'roadtrip2025berlin',pokemon:[{id:25,name:'Pikachu'}]},{name:'Arizona Diamondbacks',slug:'arizonadiamondbacks',pokemon:[{id:25,name:'Pikachu'}]},{name:'Chicago White Sox',slug:'chicagowhitesox',pokemon:[{id:25,name:'Pikachu'}]},{name:'Baltimore Orioles',slug:'baltimoreorioles',pokemon:[{id:25,name:'Pikachu'}]},{name:'Cleveland Guardians',slug:'clevelandguardians',pokemon:[{id:25,name:'Pikachu'}]},{name:'2025 Pokemon World Championships',slug:'2025pokemonworldchampionships',pokemon:[{id:25,name:'Pikachu'}]},{name:'Road Trip 2025 The Hague',slug:'roadtrip2025thehague',pokemon:[{id:25,name:'Pikachu'}]},{name:'Road Trip 2025 Cologne',slug:'roadtrip2025cologne',pokemon:[{id:25,name:'Pikachu'}]},{name:'New York Mets',slug:'newyorkmets',pokemon:[{id:25,name:'Pikachu'}]},{name:'Boston Red Sox',slug:'bostonredsox',pokemon:[{id:25,name:'Pikachu'}]},{name:'San Francisco Giants',slug:'sanfranciscogiants',pokemon:[{id:25,name:'Pikachu'}]},{name:'Minnesota Twins',slug:'minnesotatwins',pokemon:[{id:25,name:'Pikachu'}]},{name:'Texas Rangers',slug:'texasrangers',pokemon:[{id:25,name:'Pikachu'}]},{name:'Mega Evolution Paris',slug:'megaevolutionparis',pokemon:[{id:4,name:'Charmander'}]},{name:'Mega Evolution Paris 2',slug:'megaevolutionparis2',pokemon:[{id:4,name:'Charmander'}]},{name:'City Safari Bangkok',slug:'citysafaribangkok',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Amsterdam',slug:'citysafariamsterdam',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Valencia',slug:'citysafarivalencia',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Cancun',slug:'citysafaricancun',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Vancouver',slug:'citysafarivancouver',pokemon:[{id:133,name:'Eevee'}]},{name:'Pokemon GO at Jeju Island',slug:'pokemongoatjejuisland',pokemon:[{id:25,name:'Pikachu'}]},{name:'GO Wild Area Nagasaki',slug:'gowildareanagasaki',pokemon:[{id:488,name:'Cresselia'},{id:491,name:'Darkrai'},{id:760,name:'Bewear'},{id:861,name:'Grimmsnarl'}]},{name:"Taipei Children's Amusement Park",slug:"taipeichildren'samusementpark",pokemon:[{id:131,name:'Lapras'}]},{name:'Busan Fireworks Festival',slug:'busanfireworksfestival',pokemon:[{id:25,name:'Pikachu'}]},{name:'PokePark Kanto',slug:'pokeparkkanto',pokemon:[{id:25,name:'Pikachu'},{id:144,name:'Articuno'},{id:145,name:'Zapdos'},{id:146,name:'Moltres'}]},{name:'Carnival Flamigo Cologne',slug:'carnivalflamigocologne',pokemon:[{id:973,name:'Flamigo'}]},{name:'Carnival Flamigo Rio',slug:'carnivalflamigorio',pokemon:[{id:973,name:'Flamigo'}]},{name:'GO Tour 2026 Tainan',slug:'gotour2026tainan',pokemon:[{id:71,name:'Victreebel'},{id:130,name:'Gyarados'},{id:282,name:'Gardevoir'},{id:359,name:'Absol'},{id:448,name:'Lucario'},{id:679,name:'Honedge'},{id:686,name:'Inkay'},{id:716,name:'Xerneas'},{id:717,name:'Yveltal'}]},{name:'GO Tour 2026 Los Angeles',slug:'gotour2026losangeles',pokemon:[{id:71,name:'Victreebel'},{id:130,name:'Gyarados'},{id:282,name:'Gardevoir'},{id:359,name:'Absol'},{id:448,name:'Lucario'},{id:679,name:'Honedge'},{id:686,name:'Inkay'},{id:716,name:'Xerneas'},{id:717,name:'Yveltal'}]},{name:'Pyeongchang Winter Festival',slug:'pyeongchangwinterfestival',pokemon:[{id:25,name:'Pikachu'},{id:585,name:'Deerling'}]},{name:'City Safari Sydney',slug:'citysafarisydney',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Miami',slug:'citysafarimiami',pokemon:[{id:133,name:'Eevee'}]},{name:'City Safari Buenos Aires',slug:'citysafaribuenosaires',pokemon:[{id:133,name:'Eevee'}]},{name:'NFL Cardinals',slug:'nflcardinals',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Okinawa',slug:'pokelidokinawa',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Fukuoka',slug:'pokelidfukuoka',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Kagoshima',slug:'pokelidkagoshima',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Miyazaki',slug:'pokelidmiyazaki',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Nagasaki',slug:'pokelidnagasaki',pokemon:[{id:25,name:'Pikachu'},{id:181,name:'Ampharos'}]},{name:'Pokelid Saga',slug:'pokelidsaga',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Aichi',slug:'pokelidaichi',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Akita',slug:'pokelidakita',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Aomori',slug:'pokelidaomori',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Chiba',slug:'pokelidchiba',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Fukui',slug:'pokelidfukui',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Fukushima',slug:'pokelidfukushima',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Gifu',slug:'pokelidgifu',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Hokkaido',slug:'pokelidhokkaido',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Hyogo',slug:'pokelidhyogo',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Ibaraki',slug:'pokelidibaraki',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Ishikawa',slug:'pokelidishikawa',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Iwate',slug:'pokelidiwate',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Kanagawa',slug:'pokelidkanagawa',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Kyoto',slug:'pokelidkyoto',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Mie',slug:'pokelidmie',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Miyagi',slug:'pokelidmiyagi',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Nara',slug:'pokelidnara',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Niigata',slug:'pokelidniigata',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Osaka',slug:'pokelidosaka',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Saitama',slug:'pokelidsaitama',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Shiga',slug:'pokelidshiga',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Shizuoka',slug:'pokelidshizuoka',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Tochigi',slug:'pokelidtochigi',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Tokyo',slug:'pokelidtokyo',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Toyama',slug:'pokelidtoyama',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Wakayama',slug:'pokelidwakayama',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Ehime',slug:'pokelidehime',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Kagawa',slug:'pokelidkagawa',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Kochi',slug:'pokelidkochi',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Okayama',slug:'pokelidokayama',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Shimane',slug:'pokelidshimane',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Tokushima',slug:'pokelidtokushima',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Tottori',slug:'pokelidtottori',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokelid Yamaguchi',slug:'pokelidyamaguchi',pokemon:[{id:25,name:'Pikachu'}]},{name:'GO Fest 2024 Wormhole',slug:'gofest2024wormhole',pokemon:[{id:793,name:'Nihilego'},{id:794,name:'Buzzwole'},{id:795,name:'Pheromosa'},{id:796,name:'Xurkitree'},{id:797,name:'Celesteela'},{id:798,name:'Kartana'},{id:799,name:'Guzzlord'},{id:800,name:'Necrozma'},{id:805,name:'Stakataka'},{id:806,name:'Blacephalon'}]},{name:'GO Fest 2024 Radiance',slug:'gofest2024radiance',pokemon:[{id:791,name:'Solgaleo'}]},{name:'GO Fest 2024 Umbra',slug:'gofest2024umbra',pokemon:[{id:792,name:'Lunala'}]},{name:'GO Fest 2024 Wormhole Radiance',slug:'gofest2024wormholeradiance',pokemon:[{id:800,name:'Necrozma'}]},{name:'GO Fest 2024 Wormhole Umbra',slug:'gofest2024wormholeumbra',pokemon:[{id:800,name:'Necrozma'}]},{name:'Team Valor',slug:'teamvalor',pokemon:[{id:77,name:'Ponyta'}]},{name:'Team Instinct',slug:'teaminstinct',pokemon:[{id:239,name:'Elekid'}]},{name:'Team Mystic',slug:'teammystic',pokemon:[{id:131,name:'Lapras'}]},{name:'GO Wild Area 2024',slug:'gowildarea2024',pokemon:[{id:382,name:'Kyogre'},{id:383,name:'Groudon'},{id:483,name:'Dialga'},{id:484,name:'Palkia'},{id:849,name:'Toxtricity'}]},{name:'Community Day 2024',slug:'communityday2024',pokemon:[{id:56,name:'Mankey'},{id:69,name:'Bellsprout'},{id:77,name:'Ponyta'},{id:113,name:'Chansey'},{id:137,name:'Porygon'},{id:155,name:'Cyndaquil'},{id:371,name:'Bagon'},{id:374,name:'Beldum'},{id:540,name:'Sewaddle'},{id:602,name:'Tynamo'},{id:704,name:'Goomy'},{id:722,name:'Rowlet'},{id:725,name:'Litten'},{id:728,name:'Popplio'},{id:761,name:'Bounsweet'}]},{name:'Dual Destiny',slug:'dualdestiny',pokemon:[{id:280,name:'Ralts'},{id:588,name:'Karrablast'},{id:616,name:'Shelmet'},{id:906,name:'Sprigatito'}]},{name:'GO Tour Enigma',slug:'gotourenigma',pokemon:[{id:509,name:'Purrloin'},{id:519,name:'Pidove'},{id:525,name:'Boldore'},{id:527,name:'Woobat'},{id:532,name:'Timburr'},{id:535,name:'Tympole'},{id:551,name:'Sandile'},{id:554,name:'Darumaka'},{id:555,name:'Darmanitan'},{id:559,name:'Scraggy'},{id:561,name:'Sigilyph'},{id:595,name:'Joltik'},{id:597,name:'Ferroseed'},{id:599,name:'Klink'}]},{name:'GO Tour Unova Black',slug:'gotourunovablack',pokemon:[{id:495,name:'Snivy'},{id:498,name:'Tepig'},{id:501,name:'Oshawott'},{id:638,name:'Cobalion'},{id:639,name:'Terrakion'},{id:640,name:'Virizion'},{id:641,name:'Tornadus'},{id:643,name:'Reshiram'},{id:644,name:'Zekrom'},{id:645,name:'Landorus'},{id:646,name:'Kyurem'},{id:649,name:'Genesect'}]},{name:'GO Tour Unova White',slug:'gotourunovawhite',pokemon:[{id:495,name:'Snivy'},{id:498,name:'Tepig'},{id:501,name:'Oshawott'},{id:638,name:'Cobalion'},{id:639,name:'Terrakion'},{id:640,name:'Virizion'},{id:642,name:'Thundurus'},{id:643,name:'Reshiram'},{id:644,name:'Zekrom'},{id:645,name:'Landorus'},{id:646,name:'Kyurem'},{id:649,name:'Genesect'}]},{name:'GO Tour Unova Black White',slug:'gotourunovablackwhite',pokemon:[{id:646,name:'Kyurem'}]},{name:'Might and Mastery',slug:'mightandmastery',pokemon:[{id:66,name:'Machop'},{id:158,name:'Totodile'},{id:307,name:'Meditite'},{id:434,name:'Stunky'},{id:582,name:'Vanillite'},{id:747,name:'Mareanie'},{id:909,name:'Fuecoco'},{id:921,name:'Pawmi'},{id:935,name:'Charcadet'}]},{name:'Delightful Days',slug:'delightfuldays',pokemon:[{id:131,name:'Lapras'},{id:133,name:'Eevee'},{id:144,name:'Articuno'},{id:145,name:'Zapdos'},{id:721,name:'Rookidee'},{id:782,name:'Jangmo-o'},{id:812,name:'Rillaboom'},{id:815,name:'Cinderace'},{id:818,name:'Inteleon'},{id:821,name:'Rookidee'},{id:823,name:'Corviknight'},{id:912,name:'Quaxly'}]},{name:'Ancients Recovered Regirock',slug:'ancientsrecoveredregirock',pokemon:[{id:377,name:'Regirock'}]},{name:'Ancients Recovered Regice',slug:'ancientsrecoveredregice',pokemon:[{id:378,name:'Regice'}]},{name:'Ancients Recovered Registeel',slug:'ancientsrecoveredregisteel',pokemon:[{id:379,name:'Registeel'}]},{name:'Ancients Recovered Regigigas',slug:'ancientsrecoveredregigigas',pokemon:[{id:486,name:'Regigigas'}]},{name:'Ancients Recovered Regieleki',slug:'ancientsrecoveredregieleki',pokemon:[{id:894,name:'Regieleki'}]},{name:'Ancients Recovered Regidrago',slug:'ancientsrecoveredregidrago',pokemon:[{id:895,name:'Regidrago'}]},{name:'GO Fest 2025 Zamazenta',slug:'gofest2025zamazenta',pokemon:[{id:889,name:'Zamazenta'}]},{name:'GO Fest 2025 Zacian',slug:'gofest2025zacian',pokemon:[{id:888,name:'Zacian'}]},{name:'9th Anniversary',slug:'9thanniversary',pokemon:[{id:999,name:'Gimmighoul'}]},{name:'Dark Skies',slug:'darkskies',pokemon:[{id:1,name:'Bulbasaur'},{id:3,name:'Venusaur'},{id:4,name:'Charmander'},{id:6,name:'Charizard'},{id:7,name:'Squirtle'},{id:9,name:'Blastoise'},{id:10,name:'Caterpie'},{id:12,name:'Butterfree'},{id:66,name:'Machop'},{id:68,name:'Machamp'},{id:92,name:'Gastly'},{id:94,name:'Gengar'},{id:98,name:'Krabby'},{id:99,name:'Kingler'},{id:113,name:'Chansey'},{id:131,name:'Lapras'},{id:138,name:'Omanyte'},{id:140,name:'Kabuto'},{id:143,name:'Snorlax'},{id:144,name:'Articuno'},{id:145,name:'Zapdos'},{id:146,name:'Moltres'},{id:213,name:'Shuckle'},{id:243,name:'Raikou'},{id:244,name:'Entei'},{id:245,name:'Suicune'},{id:302,name:'Sableye'},{id:320,name:'Wailmer'},{id:374,name:'Beldum'},{id:380,name:'Latias'},{id:381,name:'Latios'},{id:519,name:'Pidove'},{id:529,name:'Drilbur'},{id:554,name:'Darumaka'},{id:568,name:'Trubbish'},{id:615,name:'Cryogonal'},{id:810,name:'Grookey'},{id:812,name:'Rillaboom'},{id:813,name:'Scorbunny'},{id:815,name:'Cinderace'},{id:816,name:'Sobble'},{id:818,name:'Inteleon'},{id:819,name:'Skwovet'},{id:821,name:'Rookidee'},{id:831,name:'Wooloo'},{id:848,name:'Toxel'},{id:849,name:'Toxtricity'},{id:856,name:'Hatenna'},{id:870,name:'Falinks'}]},{name:'Tales of Transformation',slug:'talesoftransformation',pokemon:[{id:152,name:'Chikorita'},{id:158,name:'Totodile'},{id:498,name:'Tepig'},{id:577,name:'Solosis'},{id:638,name:'Cobalion'},{id:669,name:'Flabebe'}]},{name:'Pokemon Concierge',slug:'pokemonconcierge',pokemon:[{id:54,name:'Psyduck'}]},{name:'GO Wild Area 2025',slug:'gowildarea2025',pokemon:[{id:488,name:'Cresselia'},{id:491,name:'Darkrai'},{id:760,name:'Bewear'},{id:861,name:'Grimmsnarl'}]},{name:'Pokemon Astronomical Observatory',slug:'pokemonastronomicalobservatory',pokemon:[{id:35,name:'Clefairy'}]},{name:'Community Day 2026',slug:'communityday2026',pokemon:[{id:393,name:'Piplup'},{id:810,name:'Grookey'}]},{name:'GO Tour 2026 Mega',slug:'gotour2026mega',pokemon:[{id:3,name:'Venusaur'},{id:6,name:'Charizard'},{id:9,name:'Blastoise'},{id:18,name:'Pidgeot'},{id:71,name:'Victreebel'},{id:115,name:'Kangaskhan'},{id:212,name:'Scizor'},{id:214,name:'Heracross'},{id:248,name:'Tyranitar'},{id:254,name:'Sceptile'},{id:257,name:'Blaziken'},{id:260,name:'Swampert'},{id:282,name:'Gardevoir'},{id:359,name:'Absol'},{id:373,name:'Salamence'},{id:376,name:'Metagross'},{id:380,name:'Latias'},{id:381,name:'Latios'},{id:445,name:'Garchomp'},{id:448,name:'Lucario'},{id:475,name:'Gallade'},{id:687,name:'Malamar'}]},{name:'GO Tour 2026 X',slug:'gotour2026x',pokemon:[{id:25,name:'Pikachu'},{id:679,name:'Honedge'},{id:716,name:'Xerneas'}]},{name:'GO Tour 2026 Y',slug:'gotour2026y',pokemon:[{id:25,name:'Pikachu'},{id:679,name:'Honedge'},{id:717,name:'Yveltal'}]},{name:'GO Tour 2026 Gold',slug:'gotour2026gold',pokemon:[{id:25,name:'Pikachu'},{id:250,name:'Ho-Oh'}]},{name:'GO Tour 2026 Silver',slug:'gotour2026silver',pokemon:[{id:25,name:'Pikachu'},{id:249,name:'Lugia'}]},{name:'GO Tour 2026 Ruby',slug:'gotour2026ruby',pokemon:[{id:25,name:'Pikachu'},{id:383,name:'Groudon'}]},{name:'GO Tour 2026 Sapphire',slug:'gotour2026sapphire',pokemon:[{id:25,name:'Pikachu'},{id:382,name:'Kyogre'}]},{name:'GO Tour 2026 Diamond',slug:'gotour2026diamond',pokemon:[{id:25,name:'Pikachu'},{id:483,name:'Dialga'}]},{name:'GO Tour 2026 Pearl',slug:'gotour2026pearl',pokemon:[{id:25,name:'Pikachu'},{id:484,name:'Palkia'}]},{name:'Festival of Colors',slug:'festivalofcolors',pokemon:[{id:25,name:'Pikachu'}]},{name:'Pokemon Pokopia',slug:'pokemonpokopia',pokemon:[{id:131,name:'Lapras'},{id:132,name:'Ditto'},{id:143,name:'Snorlax'},{id:149,name:'Dragonite'}]}];
+
+const bgSelect = document.getElementById('bgSelect');
+const searchInput = document.getElementById('searchInput');
+const bgImg = document.getElementById('bgImg');
+const pokemonSprite = document.getElementById('pokemonSprite');
+const pokemonName = document.getElementById('pokemonName');
+const pokemonId = document.getElementById('pokemonId');
+const pokemonGrid = document.getElementById('pokemonGrid');
+const shinyToggle = document.getElementById('shinyToggle');
+const toggleTrack = document.getElementById('toggleTrack');
+const gridLabel = document.getElementById('gridLabel');
+const bgCount = document.getElementById('bgCount');
+
+let currentBg = null;
+let currentPokemon = null;
+let isShiny = false;
+let filteredIndices = [];
+
+const POGO_BASE    = 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets';
+const HOME_BASE    = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home';
+const REGULAR_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+
+function getSpriteUrl(id, shiny) {
+  const shinyPart = shiny ? '.s' : '';
+  return `${POGO_BASE}/pm${id}${shinyPart}.icon.png`;
+}
+
+function spriteWithFallback(img, id, shiny) {
+  img.onerror = () => {
+    img.onerror = () => {
+      img.onerror = null;
+      img.src = shiny ? `${REGULAR_BASE}/shiny/${id}.png` : `${REGULAR_BASE}/${id}.png`;
+    };
+    img.src = shiny ? `${HOME_BASE}/shiny/${id}.png` : `${HOME_BASE}/${id}.png`;
+  };
+}
+
+function getBgUrl(slug) {
+  return `https://www.serebii.net/pokemongo/locationcard/th/${slug}.jpg`;
+}
+
+function populateSelect(filter) {
+  const val = bgSelect.value;
+  bgSelect.innerHTML = '';
+  const lf = (filter || '').toLowerCase();
+  filteredIndices = [];
+  BACKGROUNDS.forEach((bg, i) => {
+    if (lf && !bg.name.toLowerCase().includes(lf)) return;
+    filteredIndices.push(i);
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = bg.name;
+    bgSelect.appendChild(opt);
+  });
+  // Try to keep previous selection
+  if (filteredIndices.length > 0) {
+    const prev = filteredIndices.indexOf(parseInt(val));
+    if (prev >= 0) {
+      bgSelect.value = val;
+    } else {
+      bgSelect.value = filteredIndices[0];
+      selectBackground(filteredIndices[0]);
+    }
+  }
+  bgCount.textContent = `${filteredIndices.length} of ${BACKGROUNDS.length} backgrounds`;
+}
+
+function selectBackground(idx) {
+  currentBg = BACKGROUNDS[idx];
+  if (!currentBg) return;
+  bgImg.src = getBgUrl(currentBg.slug);
+  bgImg.alt = currentBg.name;
+  renderGrid();
+  if (currentBg.pokemon.length > 0) {
+    selectPokemon(currentBg.pokemon[0]);
+  }
+}
+
+function renderGrid() {
+  pokemonGrid.innerHTML = '';
+  if (!currentBg) return;
+  gridLabel.textContent = `Eligible Pokemon (${currentBg.pokemon.length})`;
+  currentBg.pokemon.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'pokemon-card';
+    if (currentPokemon && currentPokemon.id === p.id) {
+      card.classList.add('selected');
+    }
+    card.title = `#${p.id} ${p.name}`;
+    const img = document.createElement('img');
+    img.src = getSpriteUrl(p.id, isShiny);
+    img.alt = p.name;
+    img.loading = 'lazy';
+    spriteWithFallback(img, p.id, isShiny);
+    card.appendChild(img);
+    card.addEventListener('click', () => selectPokemon(p));
+    pokemonGrid.appendChild(card);
+  });
+}
+
+function selectPokemon(p) {
+  currentPokemon = p;
+  pokemonName.textContent = p.name;
+  pokemonId.textContent = `#${p.id}`;
+  updateSprite();
+  // Update grid selection
+  const cards = pokemonGrid.querySelectorAll('.pokemon-card');
+  if (currentBg) {
+    currentBg.pokemon.forEach((pk, i) => {
+      if (cards[i]) {
+        cards[i].classList.toggle('selected', pk.id === p.id);
+      }
+    });
+  }
+}
+
+function updateSprite() {
+  if (!currentPokemon) return;
+  const url = getSpriteUrl(currentPokemon.id, isShiny);
+  pokemonSprite.src = url;
+  pokemonSprite.alt = currentPokemon.name + (isShiny ? ' (Shiny)' : '');
+  spriteWithFallback(pokemonSprite, currentPokemon.id, isShiny);
+  // Also update grid thumbnails
+  const cards = pokemonGrid.querySelectorAll('.pokemon-card img');
+  if (currentBg) {
+    currentBg.pokemon.forEach((pk, i) => {
+      if (cards[i]) {
+        cards[i].src = getSpriteUrl(pk.id, isShiny);
+        spriteWithFallback(cards[i], pk.id, isShiny);
+      }
+    });
+  }
+}
+
+bgSelect.addEventListener('change', () => {
+  selectBackground(parseInt(bgSelect.value));
+});
+
+searchInput.addEventListener('input', () => {
+  populateSelect(searchInput.value);
+});
+
+shinyToggle.addEventListener('click', () => {
+  isShiny = !isShiny;
+  toggleTrack.classList.toggle('active', isShiny);
+  updateSprite();
+});
+
+// Init
+populateSelect('');
+if (BACKGROUNDS.length > 0) {
+  bgSelect.value = 0;
+  selectBackground(0);
+}
+</script>
+</body>
+</html>

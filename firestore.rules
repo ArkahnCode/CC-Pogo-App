@@ -1,0 +1,84 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── tradeLists: each user's personal trade list ──
+    // Doc ID = Firebase Auth UID
+    // Users can only read/write their own document
+    match /tradeLists/{userId} {
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && request.resource.data.keys().hasOnly(['email', 'wanted', 'trade', 'updatedAt', 'trainerId', 'pogoIgn'])
+                            && (!('wanted' in request.resource.data) || (request.resource.data.wanted is string && request.resource.data.wanted.size() < 50000))
+                            && (!('trade' in request.resource.data) || (request.resource.data.trade is string && request.resource.data.trade.size() < 50000));
+
+      allow delete: if false; // prevent accidental full-doc deletion
+
+      // ── savedLists subcollection ──
+      // Users can only access their own saved lists
+      match /savedLists/{listId} {
+        allow read: if request.auth != null
+                    && request.auth.uid == userId;
+
+        allow create: if request.auth != null
+                      && request.auth.uid == userId
+                      && request.resource.data.keys().hasOnly(['name', 'wanted', 'trade', 'createdAt'])
+                      && request.resource.data.name is string
+                      && request.resource.data.name.size() > 0
+                      && request.resource.data.name.size() <= 100
+                      && request.resource.data.wanted is string
+                      && request.resource.data.trade is string
+                      && request.resource.data.wanted.size() < 50000
+                      && request.resource.data.trade.size() < 50000;
+
+        allow update: if request.auth != null
+                      && request.auth.uid == userId
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+                      && request.resource.data.name is string
+                      && request.resource.data.name.size() > 0
+                      && request.resource.data.name.size() <= 100;
+
+        allow delete: if request.auth != null
+                      && request.auth.uid == userId;
+      }
+    }
+
+    // ── sharedLinks: publicly readable share snapshots ──
+    // Anyone can read (needed to open a shared link without auth)
+    // Any authenticated user can create (but not update/delete)
+    // Validate payload to prevent abuse
+    match /sharedLinks/{linkId} {
+      allow read: if true;
+
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasOnly(['wanted', 'trade', 'email', 'createdAt', 'pogoIgn'])
+                    && request.resource.data.wanted is string
+                    && request.resource.data.trade is string
+                    && request.resource.data.wanted.size() < 50000
+                    && request.resource.data.trade.size() < 50000;
+
+      allow update, delete: if false; // shared links are immutable
+    }
+
+    // ── sharedLists (legacy): same rules as sharedLinks ──
+    match /sharedLists/{docId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    // ── counters: auto-increment Trainer IDs (transaction only) ──
+    match /counters/{counterId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ── Deny everything else ──
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
