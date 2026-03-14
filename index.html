@@ -233,6 +233,7 @@
       background: #fff;
       display: flex; flex-direction: column;
       user-select: none; -webkit-user-select: none;
+      min-height: 0;
     }
     #wanted-section .list-header {
       background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
@@ -280,7 +281,7 @@
     .list-card > img { width: 96px; height: 96px; display: block; margin: 0 auto; object-fit: contain; position: relative; z-index: 1; }
     .list-card.shiny > img, .list-card.shiny .sprite-wrap img { filter: drop-shadow(0 0 3px #FFD700) drop-shadow(0 0 1px #FFAA00); }
     .card-label-area {
-      height: 32px; display: flex; flex-direction: column;
+      height: 36px; display: flex; flex-direction: column;
       justify-content: center; align-items: center; margin-top: 3px;
     }
     .list-card .pname {
@@ -290,7 +291,7 @@
       max-width: 100%;
     }
     .form-badge {
-      display: block; margin: 1px auto 0;
+      display: block; margin: 4px auto 0;
       font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.3px; color: rgba(0,0,0,0.5);
       background: rgba(0,0,0,0.07); border-radius: 4px;
@@ -317,6 +318,120 @@
     .dynamax-btn { bottom: 3px; left: 6px; color: #E040A0; filter: brightness(0) drop-shadow(0 0 1px #fff) drop-shadow(0 0 3px #fff); opacity: 0.45; }
     .dynamax-btn:hover { opacity: 0.65; }
     .dynamax-btn.active { filter: none; opacity: 1; }
+    .etm-btn { bottom: 34px; right: 6px; filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 3px #fff); opacity: 0.45; }
+    .etm-btn img { width: 18px; height: 18px; display: block; }
+    .etm-btn:hover { opacity: 0.65; }
+    .etm-btn.active { filter: none; opacity: 1; }
+    .shiny-indicator {
+      position: absolute; z-index: 4; bottom: 34px; right: 6px;
+      width: 26px; height: 26px;
+      display: none; align-items: center; justify-content: center;
+      pointer-events: auto; cursor: default;
+      font-size: 16px; color: #FFD700;
+      filter: drop-shadow(0 0 2px rgba(255,215,0,0.6));
+    }
+    body.view-mode .shiny-indicator { display: flex; }
+    .etm-indicator {
+      position: absolute; z-index: 4; bottom: 2px; left: 50%;
+      transform: translateX(-50%);
+      height: 20px;
+      display: none; align-items: center; justify-content: center;
+      pointer-events: auto; cursor: default;
+    }
+    .etm-indicator img { width: 22px; height: 22px; display: block; }
+    body.view-mode .etm-indicator { display: flex; }
+    .purified-indicator {
+      position: absolute; z-index: 4; bottom: 34px; left: 6px;
+      width: 26px; height: 26px;
+      display: none; align-items: center; justify-content: center;
+      pointer-events: auto; cursor: default;
+    }
+    .purified-indicator img { width: 18px; height: 18px; display: block; }
+    body.view-mode .purified-indicator { display: flex; }
+
+    /* ── Card detail modal (view-mode) ── */
+    #card-detail-overlay {
+      position: fixed; inset: 0; z-index: 600;
+      background: rgba(0,0,0,0.55);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    #card-detail-overlay.open { opacity: 1; pointer-events: auto; }
+    #card-detail-modal {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 601; background: transparent;
+      display: none; flex-direction: column; align-items: center;
+    }
+    #card-detail-modal.open { display: flex; }
+    #card-detail-close {
+      position: absolute; top: -12px; right: -12px; z-index: 2;
+      width: 32px; height: 32px; border: none; border-radius: 50%;
+      background: rgba(0,0,0,0.5); color: #fff; font-size: 1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    #card-detail-close:hover { background: rgba(0,0,0,0.7); }
+    .cd-card {
+      position: relative; border-radius: 28px;
+      padding: 20px 16px 20px; text-align: center;
+      width: 260px;
+      box-shadow: 0 8px 36px rgba(0,0,0,0.25);
+    }
+    .cd-card.has-bg { border: 3px solid #333; }
+    .cd-card.purified { border: 3px solid #a0c4ff; box-shadow: 0 0 12px 4px rgba(160,196,255,0.7), 0 8px 36px rgba(0,0,0,0.25); }
+    .cd-card.shiny { border: 3px solid #FFD700; box-shadow: 0 0 0 4px rgba(255,215,0,0.2), 0 8px 36px rgba(0,0,0,0.25); }
+    .cd-card.dynamax { border: 3px solid #E040A0; box-shadow: 0 0 0 4px rgba(224,64,160,0.2), 0 8px 36px rgba(0,0,0,0.25); }
+    .cd-card .bg-badge {
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 210px;
+      pointer-events: none; z-index: 0;
+      border-radius: 25px 25px 0 0;
+      overflow: hidden;
+    }
+    .cd-card .bg-badge img {
+      width: 100%; height: 100%; object-fit: cover;
+      border-radius: 25px 25px 0 0; display: block;
+      border-bottom: 2px solid rgba(0,0,0,0.8);
+    }
+    .cd-card .pokemon-sprite { width: 180px; height: 180px; display: block; margin: 0 auto; object-fit: contain; position: relative; z-index: 1; }
+    .cd-card.shiny .pokemon-sprite { filter: drop-shadow(0 0 4px #FFD700) drop-shadow(0 0 2px #FFAA00); }
+    .cd-card.purified .pokemon-sprite { filter: drop-shadow(0 0 6px rgba(220,235,255,0.8)) drop-shadow(0 0 10px rgba(240,248,255,0.5)); }
+    .cd-card .sprite-wrap { position: relative; width: 180px; height: 180px; margin: 0 auto; }
+    .cd-card .sprite-wrap img { width: 180px; height: 180px; display: block; object-fit: contain; position: relative; z-index: 1; }
+    .cd-card .cloud-overlay {
+      position: absolute; left: 0; right: 0; top: -18px; height: 56px; z-index: 0;
+      background: url('Resources/cloud.webp') center/contain no-repeat;
+      pointer-events: none;
+    }
+    .cd-card .cd-name {
+      font-size: 1.3rem; font-weight: 700; color: rgba(0,0,0,0.7);
+      text-transform: capitalize; margin-top: 14px;
+      position: relative; z-index: 2;
+    }
+    .cd-card .cd-form {
+      font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+      color: rgba(0,0,0,0.45); margin-top: 2px;
+      position: relative; z-index: 2;
+    }
+    .cd-card .cd-moves {
+      margin-top: 10px; text-align: left; padding: 0 8px;
+      position: relative; z-index: 2;
+    }
+    .cd-card .cd-move-label {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      color: rgba(0,0,0,0.4); letter-spacing: 0.4px; margin-top: 6px;
+    }
+    .cd-card .cd-move-label:first-child { margin-top: 0; }
+    .cd-card .cd-move-name {
+      font-size: 0.85rem; font-weight: 600; color: rgba(0,0,0,0.65);
+      padding: 2px 0;
+    }
+    .cd-card .cd-indicators {
+      display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 8px;
+      position: relative; z-index: 2;
+    }
+    .cd-card .cd-indicators span { display: flex; align-items: center; justify-content: center; }
+    body.view-mode .list-card { cursor: pointer; }
+
     .bg-btn { bottom: 6px; right: 6px; filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 3px #fff); opacity: 0.45; }
     .bg-btn .bg-icon { display: block; width: 14px; height: 9px; border: 2px solid #000; border-radius: 1px; }
     .bg-btn.active .bg-icon { background: #000; }
@@ -394,8 +509,59 @@
       font-size: 0.8rem; font-weight: 700; cursor: pointer; text-align: center;
     }
     .bp-remove-btn:hover { background: #e55; }
+
+    /* ── Elite TM / Exclusive moves modal ── */
+    #etm-overlay {
+      position: fixed; inset: 0; z-index: 600;
+      background: rgba(0,0,0,0.5);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    #etm-overlay.open { opacity: 1; pointer-events: auto; }
+    #etm-modal {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 601; background: #fff; border-radius: 16px;
+      box-shadow: 0 8px 36px rgba(0,0,0,0.2);
+      width: 380px; max-width: 90vw; max-height: 70vh;
+      display: none; flex-direction: column; overflow: hidden;
+    }
+    #etm-modal.open { display: flex; }
+    .etm-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 10px; border-bottom: 1px solid #EBEBF0;
+    }
+    .etm-header h3 { font-size: 0.9rem; font-weight: 700; color: #1C1C2E; margin: 0; }
+    #etm-close {
+      width: 28px; height: 28px; border: none; background: none;
+      font-size: 1.1rem; color: #999; cursor: pointer; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #etm-close:hover { background: #F0F0F5; }
+    .etm-body {
+      padding: 16px; overflow-y: auto; flex: 1; min-height: 0;
+      font-size: 0.85rem; color: #444;
+    }
+    .etm-section-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      color: #999; letter-spacing: 0.5px; margin: 12px 0 6px; padding: 0;
+    }
+    .etm-section-label:first-child { margin-top: 0; }
+    .etm-limit { font-weight: 500; opacity: 0.7; }
+    .etm-move {
+      display: block; width: 100%; text-align: left;
+      padding: 10px 14px; margin-bottom: 4px;
+      border: 2px solid #E0E0E5; border-radius: 10px;
+      background: #FAFAFC; color: #333;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .etm-move:hover { border-color: #CCC; background: #F0F0F5; }
+    .etm-move.selected {
+      border-color: #CC0000; background: rgba(204, 0, 0, 0.06); color: #CC0000;
+    }
+
     .list-card > img.pokemon-sprite { position: relative; z-index: 1; }
-    .list-card .sprite-wrap { position: relative; width: 96px; height: 96px; margin: 0 auto; }
+    .list-card .sprite-wrap { position: relative; width: 96px; height: 96px; margin: 0 auto; overflow: hidden; }
     .list-card .sprite-wrap img { width: 96px; height: 96px; display: block; object-fit: contain; position: relative; z-index: 1; }
     .list-card.gigantamax .sprite-wrap img { width: 88px; height: 88px; margin: 4px auto 0; }
     .list-card .cloud-overlay {
@@ -734,10 +900,12 @@
     body.view-mode .shiny-btn,
     body.view-mode .purified-btn,
     body.view-mode .dynamax-btn,
-    body.view-mode .bg-btn { display: none; }
+    body.view-mode .bg-btn,
+    body.view-mode .etm-btn { display: none; }
     body.view-mode #search,
     body.view-mode #gen-filter,
     body.view-mode #share-btn { display: none; }
+    body.view-mode #settings-btn { margin-left: auto; }
     #copy-to-mine {
       padding: 5px 12px; border: none; border-radius: 8px;
       background: #CC0000; color: #fff; font-weight: 600;
@@ -850,6 +1018,20 @@
     body.dark-mode .shiny-btn:hover { background: rgba(255,255,255,0.08); }
     body.dark-mode .list-card > button.active { filter: none; opacity: 1; }
     body.dark-mode .bg-badge { opacity: 1; }
+    body.dark-mode #etm-modal { background: #1b1d1f; }
+    body.dark-mode .etm-header { border-bottom-color: #333; }
+    body.dark-mode .etm-header h3 { color: #e0e0e0; }
+    body.dark-mode .etm-body { color: #bbb; }
+    body.dark-mode .etm-section-label { color: #777; }
+    body.dark-mode .etm-move { background: #242628; border-color: #3a3a3f; color: #ddd; }
+    body.dark-mode .etm-move:hover { background: #2c2e30; border-color: #555; }
+    body.dark-mode .etm-move.selected { border-color: #CC0000; background: rgba(204, 0, 0, 0.12); color: #ff6666; }
+    body.dark-mode .cd-card .cd-name { color: rgba(0,0,0,0.7); }
+    body.dark-mode .cd-card .cd-form { color: rgba(0,0,0,0.45); }
+    body.dark-mode .cd-card .cd-move-label { color: rgba(0,0,0,0.4); }
+    body.dark-mode .cd-card .cd-move-name { color: rgba(0,0,0,0.65); }
+    body.dark-mode #card-detail-close { background: rgba(255,255,255,0.2); }
+    body.dark-mode #card-detail-close:hover { background: rgba(255,255,255,0.35); }
     body.dark-mode #bg-picker { background: #1b1d1f; }
     body.dark-mode #bg-picker .bp-header { border-bottom-color: #333; }
     body.dark-mode #bg-picker .bp-header h3 { color: #e0e0e0; }
@@ -953,11 +1135,11 @@
       }
       .ctx-form-thumb::before {
         left: 0;
-        background: linear-gradient(to right, rgba(79,195,247,0.6), transparent);
+        background: linear-gradient(to right, rgba(255,107,107,0.6), transparent);
       }
       .ctx-form-thumb::after {
         right: 0;
-        background: linear-gradient(to left, rgba(255,107,107,0.6), transparent);
+        background: linear-gradient(to left, rgba(79,195,247,0.6), transparent);
       }
 
       /* Swipe instruction banner */
@@ -968,8 +1150,8 @@
         color: #999; border-bottom: 1px solid rgba(0,0,0,0.06);
         grid-column: 1 / -1;
       }
-      .swipe-instruction .swipe-left { color: #2196F3; }
-      .swipe-instruction .swipe-right { color: #FF6B6B; }
+      .swipe-instruction .swipe-left { color: #FF6B6B; }
+      .swipe-instruction .swipe-right { color: #2196F3; }
       .swipe-instruction .swipe-dot { color: #ccc; }
       body.dark-mode .swipe-instruction { border-bottom-color: rgba(255,255,255,0.08); }
 
@@ -1040,6 +1222,17 @@
       }
       body.dark-mode .list-tab span { background: rgba(255,255,255,0.12); }
 
+      /* Expand/collapse button in list tabs */
+      #lists-expand-btn {
+        display: block !important;
+        flex: none; width: 32px; border: none; background: none;
+        font-size: 1rem; color: #888; cursor: pointer;
+        padding: 0; margin-left: -4px;
+        transition: transform 0.2s;
+      }
+      body.lists-expanded #lists-expand-btn { transform: rotate(180deg); }
+      body.view-mode #lists-expand-btn { display: none !important; }
+
       #lists {
         display: flex; flex-direction: column;
         gap: 0; padding: 0;
@@ -1057,7 +1250,11 @@
         min-height: 0; overflow-y: auto;
         border-radius: 0;
       }
-      .list-header { padding: 8px 12px !important; }
+
+      /* Expanded lists mode: hide picker, lists fill screen */
+      body.lists-expanded #picker { display: none; }
+      body.lists-expanded #list-panels > .list-section { max-height: none !important; }
+      .list-header { padding: 8px 12px !important; display: none !important; }
       .list-header h2 { font-size: 0.85rem; }
       .list-count { font-size: 0.65rem; padding: 1px 7px; }
       .list-grid {
@@ -1066,10 +1263,16 @@
       }
       .list-card { padding: 8px 4px 24px; border-radius: 16px; }
       .list-card > img, .list-card .sprite-wrap img { width: 72px; height: 72px; }
-      .list-card .sprite-wrap { width: 72px; height: 72px; }
+      .list-card .sprite-wrap { width: 72px; height: 72px; overflow: hidden; }
+      .list-card.gigantamax .sprite-wrap img { width: 64px; height: 64px; margin: 6px auto 0; }
       .list-card .pname { font-size: 0.78rem; }
       .form-badge { font-size: 0.6rem; }
       .card-label-area { height: 28px; }
+      .purified-indicator { bottom: 26px; width: 22px; height: 22px; }
+      .purified-indicator img { width: 16px; height: 16px; }
+      .shiny-indicator { bottom: 26px; width: 22px; height: 22px; font-size: 14px; }
+      .etm-indicator { bottom: 0px; }
+      .etm-indicator img { width: 18px; height: 18px; }
 
       /* Touch targets: minimum 44px */
       .list-card > button { width: 32px; height: 32px; font-size: 1.1rem; }
@@ -1077,7 +1280,44 @@
 
       /* Background picker mobile */
       #bg-picker { width: 95vw; max-width: 95vw; }
+
+      /* View-mode mobile: vertical split with drag handle */
+      body.view-mode #list-tabs { display: none; }
+      body.view-mode #list-panels {
+        display: flex; flex-direction: column;
+        overflow: hidden;
+        scroll-snap-type: none;
+      }
+      body.view-mode #list-panels > .list-section {
+        flex: none; scroll-snap-align: none;
+        min-height: 80px; overflow-y: auto;
+      }
+      body.view-mode #wanted-section { height: 50%; }
+      body.view-mode #trade-section { flex: 1; }
+      body.view-mode #resize-handle { display: flex; }
+      body.view-mode .list-header { display: flex !important; }
     }
+
+    /* Expand button: hidden on desktop and view-mode */
+    #lists-expand-btn { display: none; }
+    body.view-mode #lists-expand-btn { display: none; }
+
+    /* Resize handle (hidden by default) */
+    #resize-handle {
+      display: none;
+      width: 100%; height: 20px;
+      align-items: center; justify-content: center;
+      cursor: row-resize; touch-action: none;
+      background: #e8eaed; flex-shrink: 0;
+      z-index: 5;
+    }
+    body.dark-mode #resize-handle { background: #2c2e31; }
+    #resize-handle .handle-bar {
+      width: 40px; height: 4px; border-radius: 2px;
+      background: #bbb;
+    }
+    body.dark-mode #resize-handle .handle-bar { background: #666; }
+
   </style>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -1204,20 +1444,11 @@
 
 <div id="lists">
   <div id="list-tabs">
-    <button class="list-tab" data-tab="0">&#8646; Available <span id="tab-trade-count">0</span></button>
-    <button class="list-tab active" data-tab="1">&#11088; Wanted <span id="tab-wanted-count">0</span></button>
+    <button class="list-tab active" data-tab="0">&#11088; Wanted <span id="tab-wanted-count">0</span></button>
+    <button class="list-tab" data-tab="2">&#8646; Available <span id="tab-trade-count">0</span></button>
+    <button id="lists-expand-btn" title="Expand lists">&#9650;</button>
   </div>
   <div id="list-panels">
-  <div class="list-section" id="trade-section">
-    <div class="list-header">
-      <h2>&#8646; Available to Trade</h2>
-      <span class="list-count" id="trade-count">0</span>
-      <button class="clear-btn" id="clear-trade">Clear</button>
-      <button class="clear-btn" id="clear-all-trade">Clear All</button>
-    </div>
-    <div class="list-grid" id="trade-grid"></div>
-  </div>
-
   <div class="list-section" id="wanted-section">
     <div class="list-header">
       <h2>&#11088; Wanted</h2>
@@ -1227,6 +1458,17 @@
     </div>
     <div class="list-grid" id="wanted-grid"></div>
   </div>
+
+  <div id="resize-handle"><div class="handle-bar"></div></div>
+  <div class="list-section" id="trade-section">
+    <div class="list-header">
+      <h2>&#8646; Available to Trade</h2>
+      <span class="list-count" id="trade-count">0</span>
+      <button class="clear-btn" id="clear-trade">Clear</button>
+      <button class="clear-btn" id="clear-all-trade">Clear All</button>
+    </div>
+    <div class="list-grid" id="trade-grid"></div>
+  </div>
   </div>
 </div>
 
@@ -1234,8 +1476,8 @@
 <div id="ctx-menu">
   <div class="ctx-pokemon-name" id="ctx-name"></div>
   <div class="ctx-actions">
-    <button id="ctx-trade">&#8646; Add to Trade</button>
     <button id="ctx-wanted">&#11088; Add to Wanted</button>
+    <button id="ctx-trade">&#8646; Add to Trade</button>
   </div>
   <div id="ctx-forms"></div>
 </div>
@@ -1250,6 +1492,25 @@
   <input type="text" id="bp-search" placeholder="Search backgrounds...">
   <div class="bp-grid" id="bp-grid"></div>
   <button class="bp-remove-btn" id="bp-remove" style="display:none">Remove Background</button>
+</div>
+
+<!-- Elite TM / Exclusive moves modal -->
+<div id="etm-overlay"></div>
+<div id="etm-modal">
+  <div class="etm-header">
+    <h3 id="etm-title">Exclusive Moves</h3>
+    <button id="etm-close">&#10005;</button>
+  </div>
+  <div class="etm-body" id="etm-body">
+    <!-- will be populated by openEtmModal -->
+  </div>
+</div>
+
+<!-- Card detail modal (view-mode) -->
+<div id="card-detail-overlay"></div>
+<div id="card-detail-modal">
+  <button id="card-detail-close">&#10005;</button>
+  <div id="card-detail-body"></div>
 </div>
 
 <div id="toast"></div>
@@ -1538,7 +1799,7 @@ let ignCommitting = false;
 async function commitIgn() {
   if (ignCommitting) return;
   ignCommitting = true;
-  const val = pogoIgnInput.value.trim() || trainerIdDisplay.textContent;
+  const val = pogoIgnInput.value.trim().replace(/[\x00-\x1f\x7f]/g, '').slice(0, 30) || trainerIdDisplay.textContent;
   pogoIgnDisplay.textContent = val;
   pogoIgnEditDisplay.textContent = val;
   pogoIgnInput.style.display = 'none';
@@ -1630,7 +1891,7 @@ async function loadFromCloud() {
     state.trade  = decodeList(data.trade, allMap);
     renderList('wanted');
     renderList('trade');
-    renderPicker();
+    updatePickerHighlights();
     lastSavedState = { w: data.wanted || '', t: data.trade || '' };
     setSaveIndicator('saved');
     showToast('Loaded from cloud!');
@@ -1663,9 +1924,10 @@ async function loadSharedList(userId) {
     const allMap = new Map(state.all.map(p => [p.id, p.name]));
     state.wanted = decodeList(data.wanted, allMap);
     state.trade  = decodeList(data.trade, allMap);
+    viewMode = true;
     renderList('wanted');
     renderList('trade');
-    renderPicker();
+    updatePickerHighlights();
     enterViewMode(data.email);
   } catch (e) {
     showToast('Could not load shared list');
@@ -1700,7 +1962,7 @@ document.getElementById('exit-view').addEventListener('click', () => {
   state.trade = [];
   renderList('wanted');
   renderList('trade');
-  renderPicker();
+  updatePickerHighlights();
   exitViewMode();
 });
 
@@ -1779,7 +2041,7 @@ function loadSavedList(docId, data) {
   state.trade  = decodeList(data.trade, allMap);
   renderList('wanted');
   renderList('trade');
-  renderPicker();
+  updatePickerHighlights();
   closeSettings();
   showToast(`Loaded "${data.name}"`);
 }
@@ -1853,6 +2115,7 @@ auth.onAuthStateChanged(async user => {
 // ─────────────────────────────────────────────
 // Gen ranges
 // ─────────────────────────────────────────────
+const MAX_POKEMON_ID = 1010;
 const GEN_RANGES = [
   [1, 151],   // 1
   [152, 251], // 2
@@ -1862,7 +2125,7 @@ const GEN_RANGES = [
   [650, 721], // 6
   [722, 809], // 7
   [810, 905], // 8
-  [906, 1010],// 9
+  [906, MAX_POKEMON_ID],// 9
 ];
 
 // ─────────────────────────────────────────────
@@ -1902,6 +2165,35 @@ const TYPE_COLORS = {
   water:    '#539ae2',
 };
 
+// exclusiveMovesData: loaded from JSON, keyed by Pokemon ID string
+let exclusiveMovesData = {};
+
+async function fetchExclusiveMoves() {
+  try {
+    const res = await fetch('Resources/exclusive_moves.json');
+    exclusiveMovesData = await res.json();
+  } catch (e) { console.warn('Failed to load exclusive moves:', e); }
+}
+
+// Get exclusive moves for a Pokemon ID + form key
+// Returns { fast: [...], charged: [...] } or null if none
+function getExclusiveMoves(id, form) {
+  const entry = exclusiveMovesData[String(id)];
+  if (!entry) return null;
+  let fast = [...(entry.fast || [])];
+  let charged = [...(entry.charged || [])];
+  if (form && entry.forms) {
+    const formLabel = formatFormLabel(form, id);
+    const formData = entry.forms[formLabel];
+    if (formData) {
+      fast = [...fast, ...(formData.fast || [])];
+      charged = [...charged, ...(formData.charged || [])];
+    }
+  }
+  if (fast.length === 0 && charged.length === 0) return null;
+  return { fast, charged };
+}
+
 // typeMap: Map<pokemonId, [type1, type2?]>  populated by fetchTypeMap()
 const typeMap = new Map();
 
@@ -1926,6 +2218,17 @@ function cardBg(id) {
 }
 
 async function fetchTypeMap() {
+  const cacheKey = 'pogo_typeMap_v1';
+  const cached = sessionStorage.getItem(cacheKey);
+  if (cached) {
+    try {
+      const data = JSON.parse(cached);
+      for (const [id, types] of Object.entries(data)) typeMap.set(parseInt(id), types);
+      if (state.all.length > 0) { renderPicker(); renderList('wanted'); renderList('trade'); }
+      return;
+    } catch {}
+  }
+
   const TYPE_NAMES = [
     'normal','fire','water','electric','grass','ice','fighting','poison',
     'ground','flying','psychic','bug','rock','ghost','dragon','dark','steel','fairy',
@@ -1939,12 +2242,16 @@ async function fetchTypeMap() {
       for (const { pokemon, slot } of typeData.pokemon) {
         const parts = pokemon.url.split('/').filter(Boolean);
         const id = parseInt(parts[parts.length - 1]);
-        if (isNaN(id) || id > 1010) continue; // skip alternate form IDs
+        if (isNaN(id) || id > MAX_POKEMON_ID) continue;
         if (!typeMap.has(id)) typeMap.set(id, []);
-        typeMap.get(id)[slot - 1] = name; // slot 1→index 0, slot 2→index 1
+        typeMap.get(id)[slot - 1] = name;
       }
     }
-    // Re-render with type colors now that data is available
+
+    const obj = {};
+    for (const [id, types] of typeMap.entries()) obj[id] = types;
+    try { sessionStorage.setItem(cacheKey, JSON.stringify(obj)); } catch {}
+
     if (state.all.length > 0) {
       renderPicker();
       renderList('wanted');
@@ -2603,6 +2910,23 @@ const COSTUME_LABELS = new Map([
   // Minccino / Cinccino
   ['572.cFASHION_2025', 'Fashionable'],
   ['573.cFASHION_2025', 'Fashionable'],
+  // Cubchoo / Beartic
+  ['613.cWINTER_2020', 'Holiday Ribbon'], ['613.fWINTER_2020', 'Holiday Ribbon'],
+  ['614.cWINTER_2020', 'Holiday Ribbon'], ['614.fWINTER_2020', 'Holiday Ribbon'],
+  // Froakie / Frogadier / Greninja
+  ['656.cFALL_2024', 'Witch Hat'], ['656.fFALL_2024', 'Witch Hat'],
+  ['657.cFALL_2024', 'Witch Hat'], ['657.fFALL_2024', 'Witch Hat'],
+  ['658.cFALL_2024', 'Witch Hat'], ['658.fFALL_2024', 'Witch Hat'],
+  // Sylveon
+  ['700.cHOLIDAY_2022', 'Holiday Hat'],
+  ['700.cSPRING_2023', 'Cherry Blossom'],
+  // Dedenne
+  ['702.cWINTER_2024', 'Holiday'], ['702.fWINTER_2024', 'Holiday'],
+  // Wooloo / Dubwool
+  ['831.cWINTER_2024', 'Holiday'], ['831.fWINTER_2024', 'Holiday'],
+  ['832.cWINTER_2024', 'Holiday'], ['832.fWINTER_2024', 'Holiday'],
+  // Falinks
+  ['870.cGOFEST_2025_TRAIN_CONDUCTOR', 'Train'], ['870.fGOFEST_2025_TRAIN_CONDUCTOR', 'Train'],
   // Ursaluna
   ['901.cFALL_2025', 'Witch Hat'],
 ]);
@@ -2828,7 +3152,7 @@ async function fetchCostumeMap() {
 // ─────────────────────────────────────────────
 async function fetchPokemon() {
   try {
-    const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=1010');
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=${MAX_POKEMON_ID}`);
     if (!res.ok) throw new Error('Network error');
     const data = await res.json();
     const POKE_NAME_OVERRIDE = { 29: 'nidoran\u2640', 32: 'nidoran\u2642', 386: 'deoxys', 487: 'giratina', 492: 'shaymin', 550: 'basculin', 641: 'tornadus', 642: 'thundurus', 645: 'landorus', 647: 'keldeo', 648: 'meloetta', 668: 'pyroar', 678: 'meowstic', 681: 'aegislash', 710: 'pumpkaboo', 711: 'gourgeist', 718: 'zygarde', 741: 'oricorio', 745: 'lycanroc', 746: 'wishiwashi', 774: 'minior', 778: 'mimikyu', 849: 'toxtricity', 875: 'eiscue', 876: 'indeedee', 877: 'morpeko', 892: 'urshifu', 902: 'basculegion', 905: 'enamorus', 916: 'oinkologne', 925: 'maushold', 978: 'tatsugiri' };
@@ -2928,26 +3252,7 @@ function renderPicker() {
         document.querySelectorAll('#ctx-forms .ctx-form-thumb').forEach(t => {
           t.classList.toggle('selected', t.dataset.formKey === p.form);
         });
-        ctxMenu.style.display = 'block';
-        const isMobile = window.innerWidth <= 600;
-        if (isMobile) {
-          ctxMenu.style.left = '';
-          ctxMenu.style.top  = '';
-        } else {
-          ctxMenu.style.left = '-9999px';
-          ctxMenu.style.top  = '-9999px';
-          requestAnimationFrame(() => {
-            const rect = card.getBoundingClientRect();
-            const mW   = ctxMenu.offsetWidth;
-            const mH   = ctxMenu.offsetHeight;
-            let left = rect.left;
-            let top  = rect.bottom + 5;
-            if (left + mW > window.innerWidth)  left = window.innerWidth - mW - 8;
-            if (top  + mH > window.innerHeight) top  = rect.top - mH - 5;
-            ctxMenu.style.left = `${Math.max(4, left)}px`;
-            ctxMenu.style.top  = `${Math.max(4, top)}px`;
-          });
-        }
+        positionCtxMenu(card);
       });
       card.addEventListener('dblclick', e => {
         e.stopPropagation();
@@ -2976,10 +3281,49 @@ function renderPicker() {
   grid.appendChild(frag);
 }
 
+function updatePickerHighlights() {
+  const grid = document.getElementById('pokemon-grid');
+  const cards = grid.querySelectorAll('.picker-card');
+  if (cards.length === 0) return;
+  const wantedIds = new Set(state.wanted.map(p => p.id));
+  const tradeIds  = new Set(state.trade.map(p => p.id));
+  for (const card of cards) {
+    const id = parseInt(card.dataset.id);
+    if (!GO_AVAILABLE.has(id) || MYTHICAL_POKEMON.has(id)) continue;
+    const inW = wantedIds.has(id);
+    const inT = tradeIds.has(id);
+    card.classList.toggle('in-wanted', inW && !inT);
+    card.classList.toggle('in-trade',  inT && !inW);
+    card.classList.toggle('in-both',   inW && inT);
+  }
+}
+
 // ─────────────────────────────────────────────
 // Context menu
 // ─────────────────────────────────────────────
 const ctxMenu = document.getElementById('ctx-menu');
+
+function positionCtxMenu(anchorEl) {
+  ctxMenu.style.display = 'block';
+  if (window.innerWidth <= 600) {
+    ctxMenu.style.left = '';
+    ctxMenu.style.top  = '';
+  } else {
+    ctxMenu.style.left = '-9999px';
+    ctxMenu.style.top  = '-9999px';
+    requestAnimationFrame(() => {
+      const rect = anchorEl.getBoundingClientRect();
+      const mW   = ctxMenu.offsetWidth;
+      const mH   = ctxMenu.offsetHeight;
+      let left = rect.left;
+      let top  = rect.bottom + 5;
+      if (left + mW > window.innerWidth)  left = window.innerWidth - mW - 8;
+      if (top  + mH > window.innerHeight) top  = rect.top - mH - 5;
+      ctxMenu.style.left = `${Math.max(4, left)}px`;
+      ctxMenu.style.top  = `${Math.max(4, top)}px`;
+    });
+  }
+}
 
 function showCtxForms(id) {
   const container = document.getElementById('ctx-forms');
@@ -3001,7 +3345,7 @@ function showCtxForms(id) {
       container.innerHTML = '';
       const hint = document.createElement('div');
       hint.className = 'swipe-instruction';
-      hint.innerHTML = '<span class="swipe-left">&larr; Trade</span><span class="swipe-dot">&middot;</span><span class="swipe-right">Wanted &rarr;</span>';
+      hint.innerHTML = '<span class="swipe-left">&larr; Wanted</span><span class="swipe-dot">&middot;</span><span class="swipe-right">Trade &rarr;</span>';
       container.appendChild(hint);
       const thumb = document.createElement('div');
       thumb.className = 'ctx-form-thumb selected';
@@ -3034,7 +3378,7 @@ function showCtxForms(id) {
   if (window.innerWidth <= 600) {
     const hint = document.createElement('div');
     hint.className = 'swipe-instruction';
-    hint.innerHTML = '<span class="swipe-left">&larr; Trade</span><span class="swipe-dot">&middot;</span><span class="swipe-right">Wanted &rarr;</span>';
+    hint.innerHTML = '<span class="swipe-left">&larr; Wanted</span><span class="swipe-dot">&middot;</span><span class="swipe-right">Trade &rarr;</span>';
     container.appendChild(hint);
   }
 
@@ -3089,29 +3433,7 @@ function onPickerClick(e) {
 
   showCtxForms(state.pendingId);
 
-  ctxMenu.style.display = 'block';
-
-  const isMobile = window.innerWidth <= 600;
-  if (isMobile) {
-    // Bottom sheet: CSS handles positioning via !important
-    ctxMenu.style.left = '';
-    ctxMenu.style.top  = '';
-  } else {
-    ctxMenu.style.left = '-9999px';
-    ctxMenu.style.top  = '-9999px';
-
-    requestAnimationFrame(() => {
-      const rect = card.getBoundingClientRect();
-      const mW   = ctxMenu.offsetWidth;
-      const mH   = ctxMenu.offsetHeight;
-      let left = rect.left;
-      let top  = rect.bottom + 5;
-      if (left + mW > window.innerWidth)  left = window.innerWidth - mW - 8;
-      if (top  + mH > window.innerHeight) top  = rect.top - mH - 5;
-      ctxMenu.style.left = `${Math.max(4, left)}px`;
-      ctxMenu.style.top  = `${Math.max(4, top)}px`;
-    });
-  }
+  positionCtxMenu(card);
 }
 
 document.getElementById('ctx-wanted').addEventListener('click', () => {
@@ -3153,14 +3475,14 @@ function addToList(list) {
   const form = state.pendingForm;
   arr.push({ id: state.pendingId, name: state.pendingName, shiny: false, bg: '', dynamax: false, purified: false, form });
   renderList(list);
-  renderPicker();
+  updatePickerHighlights();
   scheduleAutoSave();
 }
 
 function removeFromList(list, idx) {
   state[list].splice(idx, 1);
   renderList(list);
-  renderPicker();
+  updatePickerHighlights();
   scheduleAutoSave();
 }
 
@@ -3223,6 +3545,139 @@ function toggleBg(list, idx) {
   if (available.length === 0) return;
   openBgPicker(list, idx, available);
 }
+
+// ── Elite TM / Exclusive moves modal ──
+const etmOverlay = document.getElementById('etm-overlay');
+const etmModal   = document.getElementById('etm-modal');
+const etmBody    = document.getElementById('etm-body');
+const etmTitle   = document.getElementById('etm-title');
+let etmState = null; // { list, idx }
+
+function openEtmModal(list, idx) {
+  const entry = state[list][idx];
+  if (!entry) return;
+  const moves = getExclusiveMoves(entry.id, entry.form);
+  if (!moves) return;
+  etmState = { list, idx };
+  const selected = new Set(entry.etm || []);
+  const capName = entry.name.charAt(0).toUpperCase() + entry.name.slice(1);
+  etmTitle.textContent = `${capName} — Exclusive Moves`;
+  const MAX_FAST = 1;
+  const MAX_CHARGED = 2;
+  let html = '';
+  if (moves.fast.length > 0) {
+    html += `<div class="etm-section-label">Fast Moves <span class="etm-limit">(max ${MAX_FAST})</span></div>`;
+    moves.fast.forEach(m => {
+      html += `<button class="etm-move${selected.has(m) ? ' selected' : ''}" data-move="${escapeHtml(m)}" data-type="fast">${escapeHtml(m)}</button>`;
+    });
+  }
+  if (moves.charged.length > 0) {
+    html += `<div class="etm-section-label">Charged Moves <span class="etm-limit">(max ${MAX_CHARGED})</span></div>`;
+    moves.charged.forEach(m => {
+      html += `<button class="etm-move${selected.has(m) ? ' selected' : ''}" data-move="${escapeHtml(m)}" data-type="charged">${escapeHtml(m)}</button>`;
+    });
+  }
+  etmBody.innerHTML = html;
+  etmBody.querySelectorAll('.etm-move').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const move = btn.dataset.move;
+      const type = btn.dataset.type;
+      if (!entry.etm) entry.etm = [];
+      const i = entry.etm.indexOf(move);
+      if (i >= 0) {
+        entry.etm.splice(i, 1);
+        btn.classList.remove('selected');
+      } else {
+        const max = type === 'fast' ? MAX_FAST : MAX_CHARGED;
+        const allMoves = type === 'fast' ? moves.fast : moves.charged;
+        const currentCount = entry.etm.filter(m => allMoves.includes(m)).length;
+        if (currentCount >= max) return;
+        entry.etm.push(move);
+        btn.classList.add('selected');
+      }
+      renderList(list);
+      scheduleAutoSave();
+    });
+  });
+  etmOverlay.classList.add('open');
+  etmModal.classList.add('open');
+}
+
+function closeEtmModal() {
+  etmOverlay.classList.remove('open');
+  etmModal.classList.remove('open');
+  etmState = null;
+}
+
+etmOverlay.addEventListener('click', closeEtmModal);
+document.getElementById('etm-close').addEventListener('click', closeEtmModal);
+
+// ── Card detail modal (view-mode) ──
+const cdOverlay = document.getElementById('card-detail-overlay');
+const cdModal   = document.getElementById('card-detail-modal');
+const cdBody    = document.getElementById('card-detail-body');
+
+function openCardDetail(p) {
+  const form = p.form || '';
+  const formLabel = form ? formatFormLabel(form, p.id) : '';
+  const showClouds = p.dynamax || isGigantamax(form);
+  const capName = p.name.charAt(0).toUpperCase() + p.name.slice(1);
+  let cls = 'cd-card';
+  if (p.shiny) cls += ' shiny';
+  if (p.purified) cls += ' purified';
+  if (showClouds) cls += ' dynamax';
+  if (p.bg) cls += ' has-bg';
+
+  let html = `<div class="${cls}" style="background:${cardBg(p.id)}">`;
+  if (p.bg) html += `<span class="bg-badge"><img src="${BG_SLUG_URL(p.bg)}" alt=""></span>`;
+  if (showClouds) {
+    html += `<div class="sprite-wrap"><div class="cloud-overlay"></div><img class="pokemon-sprite" src="${spriteUrl(p.id, form, p.shiny)}" alt="${escapeHtml(p.name)}" width="180" height="180"></div>`;
+  } else {
+    html += `<img class="pokemon-sprite" src="${spriteUrl(p.id, form, p.shiny)}" alt="${escapeHtml(p.name)}" width="180" height="180">`;
+  }
+  html += `<div class="cd-name">${escapeHtml(capName)}</div>`;
+  if (formLabel) html += `<div class="cd-form">${escapeHtml(formLabel)}</div>`;
+
+  // Indicators row (purified + shiny)
+  const indicators = [];
+  if (p.purified) indicators.push('<img src="Resources/purified.png?v=2" alt="Purified" title="Purified" style="width:24px;height:24px">');
+  if (p.shiny) indicators.push('<span style="font-size:1.4rem;width:26px;height:26px;color:#FFD700;filter:drop-shadow(0 0 2px rgba(255,215,0,0.6))" title="Shiny">&#10024;</span>');
+  if (p.etm && p.etm.length > 0) indicators.push(`<img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM" title="${escapeHtml(p.etm.join(', '))}" style="width:28px;height:28px">`);
+  if (indicators.length > 0) html += `<div class="cd-indicators">${indicators.join('')}</div>`;
+
+  // Moves
+  if (p.etm && p.etm.length > 0) {
+    const moves = getExclusiveMoves(p.id, form);
+    if (moves) {
+      const fastMoves = p.etm.filter(m => moves.fast.includes(m));
+      const chargedMoves = p.etm.filter(m => moves.charged.includes(m));
+      html += '<div class="cd-moves">';
+      if (fastMoves.length > 0) {
+        html += '<div class="cd-move-label">Fast Move</div>';
+        fastMoves.forEach(m => { html += `<div class="cd-move-name">${escapeHtml(m)}</div>`; });
+      }
+      if (chargedMoves.length > 0) {
+        html += `<div class="cd-move-label">Charged Move${chargedMoves.length > 1 ? 's' : ''}</div>`;
+        chargedMoves.forEach(m => { html += `<div class="cd-move-name">${escapeHtml(m)}</div>`; });
+      }
+      html += '</div>';
+    }
+  }
+
+  html += '</div>';
+  cdBody.innerHTML = html;
+  spriteWithFallback(cdBody.querySelector('.sprite-wrap img, img.pokemon-sprite'), p.id, p.shiny);
+  cdOverlay.classList.add('open');
+  cdModal.classList.add('open');
+}
+
+function closeCardDetail() {
+  cdOverlay.classList.remove('open');
+  cdModal.classList.remove('open');
+}
+
+cdOverlay.addEventListener('click', closeCardDetail);
+document.getElementById('card-detail-close').addEventListener('click', closeCardDetail);
 
 // ── Background picker ──
 const bgPickerOverlay = document.getElementById('bg-picker-overlay');
@@ -3302,7 +3757,7 @@ bgPickerRemove.addEventListener('click', () => {
 function clearList(list) {
   state[list] = [];
   renderList(list);
-  renderPicker();
+  updatePickerHighlights();
   scheduleAutoSave();
 }
 
@@ -3337,7 +3792,10 @@ function renderList(list) {
     const hasDarkSkies = bgAvail && bgAvail.some(bg => bg.slug === 'darkskies');
     const hasBg = isGmax ? hasDarkSkies : (BG_POKEMON.has(p.id) && (!isCostume || BG_COSTUME_EXCEPTIONS.has(form)));
     const hasDynamax = !isGigantamax(form) && DYNAMAX_POKEMON.has(p.id);
-    const canPurify = !isGigantamax(form) && SHADOW_POKEMON.has(p.id) && !NO_PURIFY_FORMS.has(p.id + form) && (!form || !form.startsWith('.c') || SHADOW_COSTUMES.has(p.id + form));
+    const formId = `${p.id}${form}`;
+    const canPurify = !isGigantamax(form) && SHADOW_POKEMON.has(p.id) && !NO_PURIFY_FORMS.has(formId) && (!form || !form.startsWith('.c') || SHADOW_COSTUMES.has(formId));
+    const hasEtm = !!getExclusiveMoves(p.id, form);
+    const etmActive = p.etm && p.etm.length > 0;
     card.innerHTML = `
       ${p.bg ? `<span class="bg-badge"><img src="${BG_SLUG_URL(p.bg)}" alt=""></span>` : ''}
       ${showClouds ? `<div class="sprite-wrap"><div class="cloud-overlay"></div><img class="pokemon-sprite" src="${spriteUrl(p.id, form, p.shiny)}" alt="${escapeHtml(p.name)}" width="96" height="96"></div>` : `<img class="pokemon-sprite" src="${spriteUrl(p.id, form, p.shiny)}" alt="${escapeHtml(p.name)}" width="96" height="96">`}
@@ -3346,8 +3804,12 @@ function renderList(list) {
         ${formLabel ? `<div class="form-badge">${escapeHtml(formLabel)}</div>` : ''}
       </div>
       ${canPurify ? `<button class="purified-btn${p.purified ? ' active' : ''}" title="Purified"><img src="Resources/purified.png?v=2" alt="Purified"></button>` : ''}
-      ${!NO_SHINY_FORMS.has(p.id + (p.form || '')) ? `<button class="shiny-btn${p.shiny ? ' active' : ''}" title="${p.shiny ? 'Remove shiny' : 'Mark shiny'}">&#10024;</button>` : ''}
+      ${!NO_SHINY_FORMS.has(formId) ? `<button class="shiny-btn${p.shiny ? ' active' : ''}" title="${p.shiny ? 'Remove shiny' : 'Mark shiny'}">&#10024;</button>` : ''}
       ${hasDynamax ? `<button class="dynamax-btn${p.dynamax ? ' active' : ''}" title="${p.dynamax ? 'Remove Dynamax' : 'Mark Dynamax'}">&#9729;</button>` : ''}
+      ${hasEtm ? `<button class="etm-btn${etmActive ? ' active' : ''}" title="Exclusive moves"><img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM"></button>` : ''}
+      ${p.purified ? `<span class="purified-indicator" title="Purified"><img src="Resources/purified.png?v=2" alt="Purified"></span>` : ''}
+      ${p.shiny ? `<span class="shiny-indicator" title="Shiny">&#10024;</span>` : ''}
+      ${etmActive ? `<span class="etm-indicator" title="${escapeHtml(p.etm.join(', '))}"><img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM"></span>` : ''}
       ${hasBg ? `<button class="bg-btn${p.bg ? ' active' : ''}" title="Select background"><span class="bg-icon"></span></button>` : ''}
       <button class="remove-btn" title="Remove">&#10005;</button>
     `;
@@ -3359,25 +3821,36 @@ function renderList(list) {
     if (shinyBtn) shinyBtn.addEventListener('click', () => toggleShiny(list, idx));
     const dynBtn = card.querySelector('.dynamax-btn');
     if (dynBtn) dynBtn.addEventListener('click', () => toggleDynamax(list, idx));
+    const etmBtn = card.querySelector('.etm-btn');
+    if (etmBtn) etmBtn.addEventListener('click', () => openEtmModal(list, idx));
     const bgBtn = card.querySelector('.bg-btn');
     if (bgBtn) bgBtn.addEventListener('click', () => toggleBg(list, idx));
     card.querySelector('.remove-btn').addEventListener('click', () => removeFromList(list, idx));
-    card.addEventListener('dblclick', e => {
-      e.stopPropagation();
+    if (!viewMode) {
+      card.addEventListener('dblclick', e => {
+        e.stopPropagation();
+        if (e.target.closest('button')) return;
+        if (viewMode) return;
+        const dest = list === 'wanted' ? 'trade' : 'wanted';
+        state[dest].push({ ...p });
+        state[list].splice(idx, 1);
+        renderList(list);
+        renderList(dest);
+        updatePickerHighlights();
+        scheduleAutoSave();
+      });
+    }
+    card.addEventListener('click', e => {
+      if (!viewMode && !document.body.classList.contains('view-mode')) return;
       if (e.target.closest('button')) return;
-      const dest = list === 'wanted' ? 'trade' : 'wanted';
-      state[dest].push({ ...p });
-      state[list].splice(idx, 1);
-      renderList(list);
-      renderList(dest);
-      renderPicker();
-      scheduleAutoSave();
+      openCardDetail(p);
     });
     grid.appendChild(card);
   }
 
   const section = document.getElementById(`${list}-section`);
-  if (document.body.classList.contains('view-mode')) {
+  const isMobileExpanded = document.body.classList.contains('lists-expanded');
+  if (document.body.classList.contains('view-mode') || isMobileExpanded) {
     section.style.maxHeight = '';
   } else if (arr.length > 5) {
     requestAnimationFrame(() => {
@@ -3406,7 +3879,17 @@ function encodeList(arr) {
     const pu = p.purified ? 'p' : '';
     const f = p.form ? `-${p.form.slice(1)}` : '';
     const bgSlug = p.bg ? `~${p.bg}` : '';
-    return `${p.id}${s}${b}${d}${pu}${f}${bgSlug}`;
+    // Encode ETM moves as indices: !0.2 means moves at index 0 and 2
+    let etmPart = '';
+    if (p.etm && p.etm.length > 0) {
+      const moves = getExclusiveMoves(p.id, p.form);
+      if (moves) {
+        const allMoves = [...moves.fast, ...moves.charged];
+        const indices = p.etm.map(m => allMoves.indexOf(m)).filter(i => i >= 0);
+        if (indices.length > 0) etmPart = `!${indices.join('.')}`;
+      }
+    }
+    return `${p.id}${s}${b}${d}${pu}${etmPart}${f}${bgSlug}`;
   }).join(',');
 }
 
@@ -3420,6 +3903,10 @@ function decodeList(str, allMap) {
     const dash = s.indexOf('-');
     let idPart       = dash >= 0 ? s.slice(0, dash) : s;
     const formSuffix = dash >= 0 ? s.slice(dash + 1) : '';
+    // Extract ETM indices (after !)
+    let etmIndices = '';
+    const bang = idPart.indexOf('!');
+    if (bang >= 0) { etmIndices = idPart.slice(bang + 1); idPart = idPart.slice(0, bang); }
     const purified = idPart.endsWith('p');
     if (purified) idPart = idPart.slice(0, -1);
     const dynamax = idPart.endsWith('d');
@@ -3438,7 +3925,16 @@ function decodeList(str, allMap) {
       const avail = BG_MAP.get(id);
       bg = avail && avail.length > 0 ? avail[0].slug : '';
     }
-    return [{ id, name, shiny, bg, dynamax, purified, form }];
+    // Decode ETM move indices to move names
+    let etm = [];
+    if (etmIndices) {
+      const moves = getExclusiveMoves(id, form);
+      if (moves) {
+        const allMoves = [...moves.fast, ...moves.charged];
+        etm = etmIndices.split('.').map(i => allMoves[parseInt(i)]).filter(Boolean);
+      }
+    }
+    return [{ id, name, shiny, bg, dynamax, purified, form, etm }];
   });
 }
 
@@ -3464,9 +3960,10 @@ async function loadSharedLink(docId) {
     const allMap = new Map(state.all.map(p => [p.id, p.name]));
     state.wanted = decodeList(data.wanted, allMap);
     state.trade  = decodeList(data.trade, allMap);
+    viewMode = true;
     renderList('wanted');
     renderList('trade');
-    renderPicker();
+    updatePickerHighlights();
     enterViewMode(data.pogoIgn || data.email || 'Shared List');
   } catch (e) {
     showToast('Could not load shared list');
@@ -3495,13 +3992,7 @@ document.getElementById('share-btn').addEventListener('click', async () => {
       await navigator.clipboard.writeText(shareUrl);
       showToast('Share link copied!');
     } catch {
-      const input = document.createElement('input');
-      input.value = shareUrl;
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand('copy');
-      document.body.removeChild(input);
-      showToast('Share link copied!');
+      prompt('Copy this share link:', shareUrl);
     }
   } catch (e) {
     showToast('Share failed: ' + e.message);
@@ -3525,7 +4016,11 @@ function showToast(msg) {
 // ─────────────────────────────────────────────
 // Event listeners
 // ─────────────────────────────────────────────
-document.getElementById('search').addEventListener('input', applyFilter);
+let searchTimer;
+document.getElementById('search').addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(applyFilter, 150);
+});
 document.getElementById('gen-filter').addEventListener('change', applyFilter);
 document.getElementById('clear-wanted').addEventListener('click', () => {
   if (state.wanted.length > 0 && !confirm('Clear all Wanted Pokémon?')) return;
@@ -3550,8 +4045,9 @@ document.getElementById('clear-all-trade').addEventListener('click', () => {
 renderList('wanted');
 renderList('trade');
 fetchPokemon();
-fetchTypeMap();    // runs in background, re-renders with type colors when ready
-fetchCostumeMap(); // runs in background, populates costumeMap
+fetchTypeMap();       // runs in background, re-renders with type colors when ready
+fetchCostumeMap();    // runs in background, populates costumeMap
+fetchExclusiveMoves(); // loads exclusive move data for ETM button
 
 // ─────────────────────────────────────────────
 // Mobile swipe-to-add on form thumbnails
@@ -3588,11 +4084,11 @@ function attachFormSwipe(thumb, formKey) {
       thumb.appendChild(hintEl);
     }
     if (dx < -THRESHOLD) {
-      hintEl.className = 'swipe-hint trade-hint show';
-      hintEl.textContent = 'TRADE';
-    } else if (dx > THRESHOLD) {
       hintEl.className = 'swipe-hint wanted-hint show';
       hintEl.textContent = 'WANTED';
+    } else if (dx > THRESHOLD) {
+      hintEl.className = 'swipe-hint trade-hint show';
+      hintEl.textContent = 'TRADE';
     } else {
       hintEl.className = 'swipe-hint';
       hintEl.textContent = '';
@@ -3609,7 +4105,7 @@ function attachFormSwipe(thumb, formKey) {
 
     if (Math.abs(dx) >= THRESHOLD) {
       state.pendingForm = formKey;
-      const list = dx < 0 ? 'trade' : 'wanted';
+      const list = dx < 0 ? 'wanted' : 'trade';
       addToList(list);
       closeCtx();
     }
@@ -3637,32 +4133,139 @@ function attachFormSwipe(thumb, formKey) {
     tabs.forEach((t, i) => t.classList.toggle('active', i === idx));
   }
 
-  tabs.forEach(tab => {
+  tabs.forEach((tab, tabIdx) => {
     tab.addEventListener('click', () => {
-      const idx = parseInt(tab.dataset.tab);
-      const section = panels.children[idx];
-      if (section) panels.scrollTo({ left: section.offsetLeft, behavior: 'smooth' });
-      setActiveTab(idx);
+      const childIdx = parseInt(tab.dataset.tab);
+      const section = panels.children[childIdx];
+      if (section) panels.scrollTo({ left: section.offsetLeft, behavior: 'instant' });
+      setActiveTab(tabIdx);
     });
   });
 
-  // Start on Wanted (index 1) on mobile
-  if (window.innerWidth <= 600) {
-    requestAnimationFrame(() => {
-      const wanted = panels.children[1];
-      if (wanted) panels.scrollTo({ left: wanted.offsetLeft, behavior: 'instant' });
+  // Wanted is now first panel (index 0), no scroll needed on init
+
+  // Detect swipe direction on touchend and update tab immediately
+  let touchStartX = null;
+  let lastTabIdx = 0;
+  panels.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  panels.addEventListener('touchend', e => {
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    touchStartX = null;
+    // If swiped far enough, predict which panel snap will land on
+    if (Math.abs(dx) > 30) {
+      const newIdx = dx < 0 ? 1 : 0; // swipe left → tab 1, swipe right → tab 0
+      if (newIdx !== lastTabIdx) {
+        lastTabIdx = newIdx;
+        setActiveTab(newIdx);
+      }
+    }
+  }, { passive: true });
+
+  // Fallback: sync on scroll settle for tab clicks and edge cases
+  panels.addEventListener('scroll', () => {
+    const idx = panels.scrollLeft > panels.offsetWidth * 0.5 ? 1 : 0;
+    if (idx !== lastTabIdx) {
+      lastTabIdx = idx;
+      setActiveTab(idx);
+    }
+  }, { passive: true });
+})();
+
+// ── Resize handle for view-mode mobile ──
+(function() {
+  const handle = document.getElementById('resize-handle');
+  const panels = document.getElementById('list-panels');
+  if (!handle || !panels) return;
+
+  let dragging = false;
+  let startY = 0;
+  let startH = 0;
+  const topSection = document.getElementById('wanted-section');
+
+  function onStart(e) {
+    if (!document.body.classList.contains('view-mode')) return;
+    dragging = true;
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    startH = topSection.offsetHeight;
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const delta = y - startY;
+    const panelH = panels.offsetHeight - handle.offsetHeight;
+    const newH = Math.max(80, Math.min(panelH - 80, startH + delta));
+    topSection.style.height = newH + 'px';
+  }
+
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    document.body.style.userSelect = '';
+    document.body.style.webkitUserSelect = '';
+  }
+
+  handle.addEventListener('touchstart', onStart, { passive: true });
+  handle.addEventListener('mousedown', onStart);
+  document.addEventListener('touchmove', onMove, { passive: false });
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('touchend', onEnd);
+  document.addEventListener('mouseup', onEnd);
+})();
+
+// ── Fix list section heights on mobile ──
+// CSS flex cross-axis stretch doesn't reliably constrain height
+// in horizontal scroll containers on mobile, so we set it via JS.
+(function() {
+  const panels = document.getElementById('list-panels');
+  const tabs = document.getElementById('list-tabs');
+  const btn = document.getElementById('lists-expand-btn');
+  if (!panels || !tabs) return;
+  const sections = panels.querySelectorAll('.list-section');
+  let expanded = false;
+
+  function fixHeights() {
+    if (window.innerWidth > 600 || document.body.classList.contains('view-mode')) {
+      panels.style.height = '';
+      sections.forEach(s => s.style.height = '');
+      return;
+    }
+    // Measure the actual height the flex layout gave #list-panels
+    const h = panels.offsetHeight;
+    if (h > 0) {
+      sections.forEach(s => s.style.height = h + 'px');
+    }
+  }
+
+  function applyExpanded() {
+    const picker = document.getElementById('picker');
+    if (expanded) {
+      if (picker) picker.style.display = 'none';
+      document.body.classList.add('lists-expanded');
+    } else {
+      if (picker) picker.style.display = '';
+      document.body.classList.remove('lists-expanded');
+    }
+    requestAnimationFrame(() => requestAnimationFrame(fixHeights));
+  }
+
+  if (btn) {
+    btn.addEventListener('click', () => {
+      expanded = !expanded;
+      applyExpanded();
     });
   }
 
-  // Sync tab indicator on scroll-snap settle
-  let scrollTimer;
-  panels.addEventListener('scroll', () => {
-    clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(() => {
-      const idx = Math.round(panels.scrollLeft / panels.offsetWidth);
-      setActiveTab(idx);
-    }, 80);
-  });
+  window.addEventListener('resize', fixHeights);
+  requestAnimationFrame(fixHeights);
+  window.addEventListener('load', () => requestAnimationFrame(fixHeights));
 })();
 </script>
 </body>
