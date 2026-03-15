@@ -10,7 +10,7 @@ python -m http.server 8765
 # then open http://localhost:8765/index.html
 ```
 
-No build step, no dependencies, no package manager. The app is a single self-contained HTML file.
+No build step, no dependencies, no package manager.
 
 **Always deploy after making changes:**
 ```bash
@@ -19,7 +19,10 @@ cd "d:\VSCode\Claude Code\Pokemon App" && npx firebase deploy
 
 ## Architecture
 
-Everything lives in `index.html` — HTML, CSS, and JS in one file. No frameworks.
+No frameworks. The app is split into three files:
+- `index.html` — HTML markup only
+- `styles.css` — all CSS
+- `app.js` — all JavaScript
 
 ### Data flow
 

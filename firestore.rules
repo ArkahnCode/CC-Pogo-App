@@ -12,7 +12,7 @@ service cloud.firestore {
 
       allow create, update: if request.auth != null
                             && request.auth.uid == userId
-                            && request.resource.data.keys().hasOnly(['email', 'wanted', 'trade', 'updatedAt', 'trainerId', 'pogoIgn'])
+                            && request.resource.data.keys().hasOnly(['email', 'wanted', 'trade', 'updatedAt', 'trainerId', 'pogoIgn', 'listName'])
                             && (!('wanted' in request.resource.data) || (request.resource.data.wanted is string && request.resource.data.wanted.size() < 50000))
                             && (!('trade' in request.resource.data) || (request.resource.data.trade is string && request.resource.data.trade.size() < 50000));
 
@@ -37,10 +37,12 @@ service cloud.firestore {
 
         allow update: if request.auth != null
                       && request.auth.uid == userId
-                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'wanted', 'trade'])
                       && request.resource.data.name is string
                       && request.resource.data.name.size() > 0
-                      && request.resource.data.name.size() <= 100;
+                      && request.resource.data.name.size() <= 100
+                      && (!('wanted' in request.resource.data) || (request.resource.data.wanted is string && request.resource.data.wanted.size() < 50000))
+                      && (!('trade' in request.resource.data) || (request.resource.data.trade is string && request.resource.data.trade.size() < 50000));
 
         allow delete: if request.auth != null
                       && request.auth.uid == userId;
@@ -55,7 +57,7 @@ service cloud.firestore {
       allow read: if true;
 
       allow create: if request.auth != null
-                    && request.resource.data.keys().hasOnly(['wanted', 'trade', 'email', 'createdAt', 'pogoIgn'])
+                    && request.resource.data.keys().hasOnly(['wanted', 'trade', 'email', 'createdAt', 'pogoIgn', 'listName'])
                     && request.resource.data.wanted is string
                     && request.resource.data.trade is string
                     && request.resource.data.wanted.size() < 50000
