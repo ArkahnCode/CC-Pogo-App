@@ -1,0 +1,1283 @@
+{
+  "3": {
+    "name": "Venusaur",
+    "fast": [],
+    "charged": ["Frenzy Plant"]
+  },
+  "5": {
+    "name": "Charmeleon",
+    "fast": ["Scratch"],
+    "charged": []
+  },
+  "6": {
+    "name": "Charizard",
+    "fast": ["Dragon Breath", "Ember", "Wing Attack"],
+    "charged": ["Blast Burn", "Flamethrower"]
+  },
+  "9": {
+    "name": "Blastoise",
+    "fast": [],
+    "charged": ["Hydro Cannon"]
+  },
+  "12": {
+    "name": "Butterfree",
+    "fast": ["Bug Bite"],
+    "charged": []
+  },
+  "15": {
+    "name": "Beedrill",
+    "fast": ["Bug Bite"],
+    "charged": ["Drill Run"]
+  },
+  "18": {
+    "name": "Pidgeot",
+    "fast": ["Gust", "Wing Attack"],
+    "charged": ["Air Cutter"]
+  },
+  "21": {
+    "name": "Spearow",
+    "fast": [],
+    "charged": ["Twister"]
+  },
+  "22": {
+    "name": "Fearow",
+    "fast": [],
+    "charged": ["Twister"]
+  },
+  "23": {
+    "name": "Ekans",
+    "fast": [],
+    "charged": ["Gunk Shot"]
+  },
+  "25": {
+    "name": "Pikachu",
+    "fast": ["Present"],
+    "charged": ["Surf", "Thunder"]
+  },
+  "26": {
+    "name": "Raichu",
+    "fast": [],
+    "charged": ["Thunder"]
+  },
+  "27": {
+    "name": "Sandshrew",
+    "fast": [],
+    "charged": ["Rock Tomb"]
+  },
+  "28": {
+    "name": "Sandslash",
+    "fast": [],
+    "charged": ["Night Slash"],
+    "forms": {
+      "Alolan": {
+        "fast": ["Shadow Claw"],
+        "charged": []
+      }
+    }
+  },
+  "34": {
+    "name": "Nidoking",
+    "fast": ["Fury Cutter"],
+    "charged": []
+  },
+  "36": {
+    "name": "Clefable",
+    "fast": ["Pound"],
+    "charged": []
+  },
+  "38": {
+    "name": "Ninetales",
+    "fast": ["Ember"],
+    "charged": ["Energy Ball", "Fire Blast", "Flamethrower"],
+    "forms": {
+      "Alolan": {
+        "fast": [],
+        "charged": ["Chilling Water"]
+      }
+    }
+  },
+  "39": {
+    "name": "Jigglypuff",
+    "fast": [],
+    "charged": ["Body Slam", "Play Rough"]
+  },
+  "41": {
+    "name": "Zubat",
+    "fast": [],
+    "charged": ["Sludge Bomb"]
+  },
+  "42": {
+    "name": "Golbat",
+    "fast": [],
+    "charged": ["Ominous Wind"]
+  },
+  "47": {
+    "name": "Parasect",
+    "fast": ["Bug Bite"],
+    "charged": []
+  },
+  "49": {
+    "name": "Venomoth",
+    "fast": ["Bug Bite"],
+    "charged": []
+  },
+  "52": {
+    "name": "Meowth",
+    "fast": [],
+    "charged": ["Body Slam"]
+  },
+  "53": {
+    "name": "Persian",
+    "fast": [],
+    "charged": ["Night Slash"]
+  },
+  "57": {
+    "name": "Primeape",
+    "fast": ["Karate Chop"],
+    "charged": ["Cross Chop", "Rage Fist"]
+  },
+  "59": {
+    "name": "Arcanine",
+    "fast": ["Bite"],
+    "charged": ["Bulldoze"]
+  },
+  "61": {
+    "name": "Poliwhirl",
+    "fast": [],
+    "charged": ["Scald"]
+  },
+  "62": {
+    "name": "Poliwrath",
+    "fast": ["Counter"],
+    "charged": ["Submission"]
+  },
+  "65": {
+    "name": "Alakazam",
+    "fast": ["Counter"],
+    "charged": ["Dazzling Gleam", "Psychic"]
+  },
+  "66": {
+    "name": "Machop",
+    "fast": ["Low Kick"],
+    "charged": []
+  },
+  "67": {
+    "name": "Machoke",
+    "fast": [],
+    "charged": ["Cross Chop"]
+  },
+  "68": {
+    "name": "Machamp",
+    "fast": ["Karate Chop"],
+    "charged": ["Payback", "Stone Edge", "Submission"]
+  },
+  "70": {
+    "name": "Weepinbell",
+    "fast": ["Razor Leaf"],
+    "charged": []
+  },
+  "71": {
+    "name": "Victreebel",
+    "fast": ["Magical Leaf"],
+    "charged": []
+  },
+  "75": {
+    "name": "Graveler",
+    "fast": [],
+    "charged": ["Rock Slide"]
+  },
+  "76": {
+    "name": "Golem",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Alolan": {
+        "fast": ["Rollout"],
+        "charged": []
+      }
+    }
+  },
+  "77": {
+    "name": "Ponyta",
+    "fast": [],
+    "charged": ["Fire Blast"]
+  },
+  "78": {
+    "name": "Rapidash",
+    "fast": ["Ember"],
+    "charged": ["Wild Charge"],
+    "forms": {
+      "Galarian": {
+        "fast": [],
+        "charged": ["Wild Charge"]
+      }
+    }
+  },
+  "80": {
+    "name": "Slowbro",
+    "fast": [],
+    "charged": ["Surf"],
+    "forms": {
+      "Galarian": {
+        "fast": [],
+        "charged": ["Surf"]
+      }
+    }
+  },
+  "83": {
+    "name": "Farfetch'd",
+    "fast": ["Cut"],
+    "charged": []
+  },
+  "84": {
+    "name": "Doduo",
+    "fast": [],
+    "charged": ["Swift"]
+  },
+  "85": {
+    "name": "Dodrio",
+    "fast": [],
+    "charged": ["Air Cutter"]
+  },
+  "86": {
+    "name": "Seel",
+    "fast": ["Water Gun"],
+    "charged": ["Aqua Jet"]
+  },
+  "87": {
+    "name": "Dewgong",
+    "fast": ["Ice Shard"],
+    "charged": ["Aqua Jet", "Icy Wind"]
+  },
+  "88": {
+    "name": "Grimer",
+    "fast": ["Acid"],
+    "charged": []
+  },
+  "89": {
+    "name": "Muk",
+    "fast": ["Acid", "Lick"],
+    "charged": []
+  },
+  "91": {
+    "name": "Cloyster",
+    "fast": [],
+    "charged": ["Blizzard"]
+  },
+  "92": {
+    "name": "Gastly",
+    "fast": ["Sucker Punch"],
+    "charged": ["Ominous Wind"]
+  },
+  "93": {
+    "name": "Haunter",
+    "fast": ["Lick"],
+    "charged": []
+  },
+  "94": {
+    "name": "Gengar",
+    "fast": ["Lick"],
+    "charged": ["Dark Pulse", "Psychic", "Shadow Punch", "Sludge Wave"]
+  },
+  "95": {
+    "name": "Onix",
+    "fast": [],
+    "charged": ["Iron Head", "Rock Slide"]
+  },
+  "97": {
+    "name": "Hypno",
+    "fast": [],
+    "charged": ["Psyshock"]
+  },
+  "99": {
+    "name": "Kingler",
+    "fast": ["Mud Shot"],
+    "charged": []
+  },
+  "100": {
+    "name": "Voltorb",
+    "fast": [],
+    "charged": ["Signal Beam"]
+  },
+  "101": {
+    "name": "Electrode",
+    "fast": ["Tackle"],
+    "charged": []
+  },
+  "103": {
+    "name": "Exeggutor",
+    "fast": ["Zen Headbutt"],
+    "charged": [],
+    "forms": {
+      "Alolan": {
+        "fast": [],
+        "charged": ["Draco Meteor"]
+      }
+    }
+  },
+  "105": {
+    "name": "Marowak",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Alolan": {
+        "fast": [],
+        "charged": ["Shadow Bone"]
+      }
+    }
+  },
+  "106": {
+    "name": "Hitmonlee",
+    "fast": [],
+    "charged": ["Brick Break", "Stomp"]
+  },
+  "107": {
+    "name": "Hitmonchan",
+    "fast": ["Rock Smash"],
+    "charged": ["Brick Break"]
+  },
+  "108": {
+    "name": "Lickitung",
+    "fast": [],
+    "charged": ["Body Slam"]
+  },
+  "109": {
+    "name": "Koffing",
+    "fast": ["Acid"],
+    "charged": []
+  },
+  "110": {
+    "name": "Weezing",
+    "fast": ["Acid"],
+    "charged": []
+  },
+  "112": {
+    "name": "Rhydon",
+    "fast": [],
+    "charged": ["Megahorn"]
+  },
+  "113": {
+    "name": "Chansey",
+    "fast": [],
+    "charged": ["Psybeam"]
+  },
+  "114": {
+    "name": "Tangela",
+    "fast": [],
+    "charged": ["Power Whip"]
+  },
+  "115": {
+    "name": "Kangaskhan",
+    "fast": [],
+    "charged": ["Brick Break", "Stomp"]
+  },
+  "117": {
+    "name": "Seadra",
+    "fast": [],
+    "charged": ["Blizzard"]
+  },
+  "119": {
+    "name": "Seaking",
+    "fast": ["Poison Jab"],
+    "charged": ["Drill Run", "Icy Wind"]
+  },
+  "120": {
+    "name": "Staryu",
+    "fast": ["Quick Attack"],
+    "charged": []
+  },
+  "121": {
+    "name": "Starmie",
+    "fast": ["Quick Attack", "Tackle"],
+    "charged": []
+  },
+  "123": {
+    "name": "Scyther",
+    "fast": ["Steel Wing"],
+    "charged": ["Bug Buzz"]
+  },
+  "124": {
+    "name": "Jynx",
+    "fast": ["Pound"],
+    "charged": ["Ice Punch"]
+  },
+  "127": {
+    "name": "Pinsir",
+    "fast": [],
+    "charged": ["Submission"]
+  },
+  "130": {
+    "name": "Gyarados",
+    "fast": ["Dragon Tail"],
+    "charged": ["Aqua Tail", "Dragon Pulse"]
+  },
+  "131": {
+    "name": "Lapras",
+    "fast": ["Ice Shard"],
+    "charged": ["Dragon Pulse", "Ice Beam"]
+  },
+  "133": {
+    "name": "Eevee",
+    "fast": [],
+    "charged": ["Body Slam", "Last Resort"]
+  },
+  "134": {
+    "name": "Vaporeon",
+    "fast": [],
+    "charged": ["Last Resort", "Scald"]
+  },
+  "135": {
+    "name": "Jolteon",
+    "fast": [],
+    "charged": ["Last Resort", "Zap Cannon"]
+  },
+  "136": {
+    "name": "Flareon",
+    "fast": [],
+    "charged": ["Heat Wave", "Last Resort", "Superpower"]
+  },
+  "137": {
+    "name": "Porygon",
+    "fast": ["Quick Attack", "Tackle", "Zen Headbutt"],
+    "charged": ["Discharge", "Psybeam", "Signal Beam"]
+  },
+  "138": {
+    "name": "Omanyte",
+    "fast": [],
+    "charged": ["Brine", "Rock Tomb"]
+  },
+  "139": {
+    "name": "Omastar",
+    "fast": ["Rock Throw"],
+    "charged": ["Rock Slide"]
+  },
+  "141": {
+    "name": "Kabutops",
+    "fast": ["Fury Cutter"],
+    "charged": []
+  },
+  "143": {
+    "name": "Snorlax",
+    "fast": ["Yawn"],
+    "charged": []
+  },
+  "144": {
+    "name": "Articuno",
+    "fast": [],
+    "charged": ["Hurricane"]
+  },
+  "145": {
+    "name": "Zapdos",
+    "fast": ["Thunder Shock"],
+    "charged": []
+  },
+  "146": {
+    "name": "Moltres",
+    "fast": [],
+    "charged": ["Sky Attack"]
+  },
+  "149": {
+    "name": "Dragonite",
+    "fast": [],
+    "charged": ["Draco Meteor", "Dragon Pulse"]
+  },
+  "150": {
+    "name": "Mewtwo",
+    "fast": [],
+    "charged": ["Hyper Beam", "Psystrike", "Shadow Ball"]
+  },
+  "154": {
+    "name": "Meganium",
+    "fast": [],
+    "charged": ["Frenzy Plant"]
+  },
+  "157": {
+    "name": "Typhlosion",
+    "fast": [],
+    "charged": ["Blast Burn"]
+  },
+  "160": {
+    "name": "Feraligatr",
+    "fast": ["Water Gun"],
+    "charged": ["Hydro Cannon"]
+  },
+  "172": {
+    "name": "Pichu",
+    "fast": ["Quick Attack"],
+    "charged": []
+  },
+  "173": {
+    "name": "Cleffa",
+    "fast": [],
+    "charged": ["Body Slam", "Psychic"]
+  },
+  "174": {
+    "name": "Igglybuff",
+    "fast": [],
+    "charged": ["Body Slam"]
+  },
+  "175": {
+    "name": "Togepi",
+    "fast": ["Zen Headbutt"],
+    "charged": []
+  },
+  "176": {
+    "name": "Togetic",
+    "fast": ["Steel Wing", "Zen Headbutt"],
+    "charged": []
+  },
+  "181": {
+    "name": "Ampharos",
+    "fast": [],
+    "charged": ["Dragon Pulse"]
+  },
+  "186": {
+    "name": "Politoed",
+    "fast": [],
+    "charged": ["Earthquake", "Ice Beam"]
+  },
+  "189": {
+    "name": "Jumpluff",
+    "fast": [],
+    "charged": ["Acrobatics"]
+  },
+  "195": {
+    "name": "Quagsire",
+    "fast": [],
+    "charged": ["Aqua Tail"]
+  },
+  "196": {
+    "name": "Espeon",
+    "fast": [],
+    "charged": ["Last Resort", "Shadow Ball"]
+  },
+  "197": {
+    "name": "Umbreon",
+    "fast": [],
+    "charged": ["Last Resort", "Psychic"]
+  },
+  "199": {
+    "name": "Slowking",
+    "fast": [],
+    "charged": ["Surf"],
+    "forms": {
+      "Galarian": {
+        "fast": [],
+        "charged": ["Surf"]
+      }
+    }
+  },
+  "230": {
+    "name": "Kingdra",
+    "fast": ["Water Gun"],
+    "charged": []
+  },
+  "238": {
+    "name": "Smoochum",
+    "fast": ["Frost Breath"],
+    "charged": []
+  },
+  "239": {
+    "name": "Elekid",
+    "fast": [],
+    "charged": ["Thunderbolt"]
+  },
+  "240": {
+    "name": "Magby",
+    "fast": [],
+    "charged": ["Flamethrower"]
+  },
+  "242": {
+    "name": "Blissey",
+    "fast": [],
+    "charged": ["Wild Charge"]
+  },
+  "245": {
+    "name": "Suicune",
+    "fast": ["Hidden Power"],
+    "charged": []
+  },
+  "248": {
+    "name": "Tyranitar",
+    "fast": ["Smack Down"],
+    "charged": []
+  },
+  "249": {
+    "name": "Lugia",
+    "fast": [],
+    "charged": ["Aeroblast"]
+  },
+  "250": {
+    "name": "Ho-Oh",
+    "fast": [],
+    "charged": ["Earthquake", "Sacred Fire"]
+  },
+  "251": {
+    "name": "Celebi",
+    "fast": ["Magical Leaf"],
+    "charged": []
+  },
+  "254": {
+    "name": "Sceptile",
+    "fast": [],
+    "charged": ["Frenzy Plant"]
+  },
+  "257": {
+    "name": "Blaziken",
+    "fast": [],
+    "charged": ["Blast Burn", "Stone Edge"]
+  },
+  "260": {
+    "name": "Swampert",
+    "fast": [],
+    "charged": ["Hydro Cannon"]
+  },
+  "275": {
+    "name": "Shiftry",
+    "fast": ["Bullet Seed"],
+    "charged": []
+  },
+  "282": {
+    "name": "Gardevoir",
+    "fast": [],
+    "charged": ["Synchronoise"]
+  },
+  "286": {
+    "name": "Breloom",
+    "fast": [],
+    "charged": ["Grass Knot"]
+  },
+  "289": {
+    "name": "Slaking",
+    "fast": [],
+    "charged": ["Body Slam"]
+  },
+  "292": {
+    "name": "Shedinja",
+    "fast": ["Struggle Bug", "Bite"],
+    "charged": []
+  },
+  "330": {
+    "name": "Flygon",
+    "fast": [],
+    "charged": ["Earth Power"]
+  },
+  "334": {
+    "name": "Altaria",
+    "fast": [],
+    "charged": ["Moonblast"]
+  },
+  "359": {
+    "name": "Absol",
+    "fast": [],
+    "charged": ["Brutal Swing"]
+  },
+  "365": {
+    "name": "Walrein",
+    "fast": ["Powder Snow"],
+    "charged": ["Icicle Spear"]
+  },
+  "373": {
+    "name": "Salamence",
+    "fast": [],
+    "charged": ["Outrage"]
+  },
+  "374": {
+    "name": "Beldum",
+    "fast": [],
+    "charged": ["Struggle"]
+  },
+  "376": {
+    "name": "Metagross",
+    "fast": ["Shadow Claw"],
+    "charged": ["Meteor Mash"]
+  },
+  "377": {
+    "name": "Regirock",
+    "fast": [],
+    "charged": ["Earthquake"]
+  },
+  "378": {
+    "name": "Regice",
+    "fast": [],
+    "charged": ["Thunder"]
+  },
+  "379": {
+    "name": "Registeel",
+    "fast": [],
+    "charged": ["Zap Cannon"]
+  },
+  "380": {
+    "name": "Latias",
+    "fast": [],
+    "charged": ["Mist Ball"]
+  },
+  "381": {
+    "name": "Latios",
+    "fast": [],
+    "charged": ["Luster Purge"]
+  },
+  "382": {
+    "name": "Kyogre",
+    "fast": [],
+    "charged": ["Origin Pulse"]
+  },
+  "383": {
+    "name": "Groudon",
+    "fast": [],
+    "charged": ["Fire Punch", "Precipice Blades"]
+  },
+  "384": {
+    "name": "Rayquaza",
+    "fast": [],
+    "charged": ["Breaking Swipe", "Dragon Ascent", "Hurricane"]
+  },
+  "389": {
+    "name": "Torterra",
+    "fast": [],
+    "charged": ["Frenzy Plant"]
+  },
+  "392": {
+    "name": "Infernape",
+    "fast": [],
+    "charged": ["Blast Burn"]
+  },
+  "395": {
+    "name": "Empoleon",
+    "fast": [],
+    "charged": ["Hydro Cannon"]
+  },
+  "398": {
+    "name": "Staraptor",
+    "fast": ["Gust"],
+    "charged": []
+  },
+  "399": {
+    "name": "Bidoof",
+    "fast": [],
+    "charged": ["Ice Beam", "Shadow Ball", "Superpower", "Thunderbolt"]
+  },
+  "405": {
+    "name": "Luxray",
+    "fast": [],
+    "charged": ["Psychic Fangs"]
+  },
+  "407": {
+    "name": "Roserade",
+    "fast": ["Bullet Seed"],
+    "charged": ["Weather Ball"]
+  },
+  "445": {
+    "name": "Garchomp",
+    "fast": [],
+    "charged": ["Earth Power"]
+  },
+  "448": {
+    "name": "Lucario",
+    "fast": ["Force Palm"],
+    "charged": []
+  },
+  "463": {
+    "name": "Lickilicky",
+    "fast": [],
+    "charged": ["Body Slam"]
+  },
+  "464": {
+    "name": "Rhyperior",
+    "fast": [],
+    "charged": ["Rock Wrecker"]
+  },
+  "466": {
+    "name": "Electivire",
+    "fast": [],
+    "charged": ["Flamethrower"]
+  },
+  "467": {
+    "name": "Magmortar",
+    "fast": [],
+    "charged": ["Thunderbolt"]
+  },
+  "468": {
+    "name": "Togekiss",
+    "fast": [],
+    "charged": ["Aura Sphere"]
+  },
+  "470": {
+    "name": "Leafeon",
+    "fast": ["Bullet Seed"],
+    "charged": ["Last Resort"]
+  },
+  "471": {
+    "name": "Glaceon",
+    "fast": [],
+    "charged": ["Last Resort", "Water Pulse"]
+  },
+  "473": {
+    "name": "Mamoswine",
+    "fast": [],
+    "charged": ["Ancient Power"]
+  },
+  "474": {
+    "name": "Porygon-Z",
+    "fast": [],
+    "charged": ["Tri Attack"]
+  },
+  "475": {
+    "name": "Gallade",
+    "fast": [],
+    "charged": ["Synchronoise"]
+  },
+  "477": {
+    "name": "Dusknoir",
+    "fast": [],
+    "charged": ["Shadow Ball"]
+  },
+  "483": {
+    "name": "Dialga",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Origin": {
+        "fast": [],
+        "charged": ["Roar of Time"]
+      }
+    }
+  },
+  "484": {
+    "name": "Palkia",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Origin": {
+        "fast": [],
+        "charged": ["Spacial Rend"]
+      }
+    }
+  },
+  "485": {
+    "name": "Heatran",
+    "fast": [],
+    "charged": ["Magma Storm"]
+  },
+  "486": {
+    "name": "Regigigas",
+    "fast": [],
+    "charged": ["Crush Grip"]
+  },
+  "487": {
+    "name": "Giratina",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Altered": {
+        "fast": [],
+        "charged": ["Shadow Force"]
+      },
+      "Origin": {
+        "fast": [],
+        "charged": ["Shadow Force"]
+      }
+    }
+  },
+  "488": {
+    "name": "Cresselia",
+    "fast": [],
+    "charged": ["Grass Knot"]
+  },
+  "491": {
+    "name": "Darkrai",
+    "fast": [],
+    "charged": ["Sludge Bomb"]
+  },
+  "497": {
+    "name": "Serperior",
+    "fast": [],
+    "charged": ["Frenzy Plant"]
+  },
+  "500": {
+    "name": "Emboar",
+    "fast": [],
+    "charged": ["Blast Burn"]
+  },
+  "503": {
+    "name": "Samurott",
+    "fast": [],
+    "charged": ["Hydro Cannon"]
+  },
+  "526": {
+    "name": "Gigalith",
+    "fast": [],
+    "charged": ["Meteor Beam"]
+  },
+  "534": {
+    "name": "Conkeldurr",
+    "fast": [],
+    "charged": ["Brutal Swing"]
+  },
+  "542": {
+    "name": "Leavanny",
+    "fast": ["Shadow Claw"],
+    "charged": []
+  },
+  "579": {
+    "name": "Reuniclus",
+    "fast": ["Charm"],
+    "charged": []
+  },
+  "584": {
+    "name": "Vanilluxe",
+    "fast": [],
+    "charged": ["Avalanche"]
+  },
+  "589": {
+    "name": "Escavalier",
+    "fast": [],
+    "charged": ["Razor Shell"]
+  },
+  "604": {
+    "name": "Eelektross",
+    "fast": ["Volt Switch"],
+    "charged": []
+  },
+  "609": {
+    "name": "Chandelure",
+    "fast": [],
+    "charged": ["Poltergeist"]
+  },
+  "612": {
+    "name": "Haxorus",
+    "fast": [],
+    "charged": ["Breaking Swipe"]
+  },
+  "617": {
+    "name": "Accelgor",
+    "fast": [],
+    "charged": ["Energy Ball"]
+  },
+  "619": {
+    "name": "Mienfoo",
+    "fast": [],
+    "charged": ["High Jump Kick"]
+  },
+  "635": {
+    "name": "Hydreigon",
+    "fast": [],
+    "charged": ["Brutal Swing"]
+  },
+  "638": {
+    "name": "Cobalion",
+    "fast": [],
+    "charged": ["Sacred Sword"]
+  },
+  "639": {
+    "name": "Terrakion",
+    "fast": [],
+    "charged": ["Sacred Sword"]
+  },
+  "640": {
+    "name": "Virizion",
+    "fast": [],
+    "charged": ["Sacred Sword"]
+  },
+  "641": {
+    "name": "Tornadus",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Therian": {
+        "fast": [],
+        "charged": ["Bleakwind Storm"]
+      }
+    }
+  },
+  "642": {
+    "name": "Thundurus",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Therian": {
+        "fast": [],
+        "charged": ["Wildbolt Storm"]
+      }
+    }
+  },
+  "643": {
+    "name": "Reshiram",
+    "fast": [],
+    "charged": ["Fusion Flare"]
+  },
+  "644": {
+    "name": "Zekrom",
+    "fast": [],
+    "charged": ["Fusion Bolt"]
+  },
+  "645": {
+    "name": "Landorus",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Therian": {
+        "fast": [],
+        "charged": ["Sandsear Storm"]
+      }
+    }
+  },
+  "646": {
+    "name": "Kyurem",
+    "fast": [],
+    "charged": ["Glaciate"],
+    "forms": {
+      "White": {
+        "fast": [],
+        "charged": ["Ice Burn"]
+      },
+      "Black": {
+        "fast": [],
+        "charged": ["Freeze Shock"]
+      }
+    }
+  },
+  "647": {
+    "name": "Keldeo",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Resolute": {
+        "fast": [],
+        "charged": ["Secret Sword"]
+      }
+    }
+  },
+  "649": {
+    "name": "Genesect",
+    "fast": [],
+    "charged": ["Techno Blast"]
+  },
+  "652": {
+    "name": "Chesnaught",
+    "fast": [],
+    "charged": ["Frenzy Plant"]
+  },
+  "655": {
+    "name": "Delphox",
+    "fast": [],
+    "charged": ["Blast Burn"]
+  },
+  "658": {
+    "name": "Greninja",
+    "fast": [],
+    "charged": ["Hydro Cannon"]
+  },
+  "663": {
+    "name": "Talonflame",
+    "fast": ["Incinerate"],
+    "charged": []
+  },
+  "671": {
+    "name": "Florges",
+    "fast": [],
+    "charged": ["Chilling Water"]
+  },
+  "700": {
+    "name": "Sylveon",
+    "fast": [],
+    "charged": ["Last Resort", "Psyshock"]
+  },
+  "706": {
+    "name": "Goodra",
+    "fast": [],
+    "charged": ["Thunder Punch"]
+  },
+  "715": {
+    "name": "Noivern",
+    "fast": [],
+    "charged": ["Boomburst"]
+  },
+  "716": {
+    "name": "Xerneas",
+    "fast": ["Geomancy"],
+    "charged": []
+  },
+  "717": {
+    "name": "Yveltal",
+    "fast": [],
+    "charged": ["Oblivion Wing"]
+  },
+  "724": {
+    "name": "Decidueye",
+    "fast": [],
+    "charged": ["Frenzy Plant"]
+  },
+  "727": {
+    "name": "Incineroar",
+    "fast": [],
+    "charged": ["Blast Burn"]
+  },
+  "730": {
+    "name": "Primarina",
+    "fast": [],
+    "charged": ["Hydro Cannon"]
+  },
+  "733": {
+    "name": "Toucannon",
+    "fast": [],
+    "charged": ["Beak Blast"]
+  },
+  "737": {
+    "name": "Charjabug",
+    "fast": ["Volt Switch"],
+    "charged": []
+  },
+  "738": {
+    "name": "Vikavolt",
+    "fast": ["Volt Switch"],
+    "charged": []
+  },
+  "760": {
+    "name": "Bewear",
+    "fast": [],
+    "charged": ["Drain Punch"]
+  },
+  "763": {
+    "name": "Tsareena",
+    "fast": [],
+    "charged": ["High Jump Kick"]
+  },
+  "784": {
+    "name": "Kommo-o",
+    "fast": [],
+    "charged": ["Clanging Scales"]
+  },
+  "785": {
+    "name": "Tapu Koko",
+    "fast": [],
+    "charged": ["Nature's Madness"]
+  },
+  "786": {
+    "name": "Tapu Lele",
+    "fast": [],
+    "charged": ["Nature's Madness"]
+  },
+  "787": {
+    "name": "Tapu Bulu",
+    "fast": [],
+    "charged": ["Nature's Madness"]
+  },
+  "788": {
+    "name": "Tapu Fini",
+    "fast": [],
+    "charged": ["Nature's Madness"]
+  },
+  "800": {
+    "name": "Necrozma",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Dusk Mane": {
+        "fast": [],
+        "charged": ["Sunsteel Strike"]
+      },
+      "Dawn Wings": {
+        "fast": [],
+        "charged": ["Moongeist Beam"]
+      }
+    }
+  },
+  "806": {
+    "name": "Blacephalon",
+    "fast": [],
+    "charged": ["Mind Blown"]
+  },
+  "809": {
+    "name": "Melmetal",
+    "fast": [],
+    "charged": ["Double Iron Bash"]
+  },
+  "812": {
+    "name": "Rillaboom",
+    "fast": [],
+    "charged": ["Frenzy Plant"]
+  },
+  "823": {
+    "name": "Corviknight",
+    "fast": [],
+    "charged": ["Air Cutter", "Iron Head"]
+  },
+  "862": {
+    "name": "Obstagoon",
+    "fast": [],
+    "charged": ["Obstruct"]
+  },
+  "888": {
+    "name": "Zacian",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Crowned Sword": {
+        "fast": [],
+        "charged": ["Behemoth Blade"]
+      }
+    }
+  },
+  "889": {
+    "name": "Zamazenta",
+    "fast": [],
+    "charged": [],
+    "forms": {
+      "Crowned Shield": {
+        "fast": [],
+        "charged": ["Behemoth Bash"]
+      }
+    }
+  },
+  "890": {
+    "name": "Eternatus",
+    "fast": [],
+    "charged": ["Dynamax Cannon"]
+  },
+  "894": {
+    "name": "Regieleki",
+    "fast": [],
+    "charged": ["Thunder Cage"]
+  },
+  "895": {
+    "name": "Regidrago",
+    "fast": ["Dragon Breath"],
+    "charged": ["Dragon Energy"]
+  },
+  "901": {
+    "name": "Ursaluna",
+    "fast": [],
+    "charged": ["High Horsepower"]
+  },
+  "908": {
+    "name": "Meowscarada",
+    "fast": [],
+    "charged": ["Frenzy Plant"]
+  },
+  "911": {
+    "name": "Skeledirge",
+    "fast": [],
+    "charged": ["Blast Burn"]
+  },
+  "914": {
+    "name": "Quaquaval",
+    "fast": [],
+    "charged": ["Hydro Cannon"]
+  },
+  "922": {
+    "name": "Pawmot",
+    "fast": [],
+    "charged": ["Brick Break"]
+  },
+  "979": {
+    "name": "Annihilape",
+    "fast": [],
+    "charged": ["Rage Fist"]
+  },
+  "980": {
+    "name": "Clodsire",
+    "fast": [],
+    "charged": ["Megahorn"]
+  }
+}

@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="only light">
   <title>Pokémon Trade List</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23cc0000' stroke='%23222' stroke-width='4'/%3E%3Crect x='2' y='46' width='96' height='8' fill='%23222'/%3E%3Ccircle cx='50' cy='50' r='48' fill='none' stroke='%23222' stroke-width='4'/%3E%3Cpath d='M2 50a48 48 0 0 1 96 0' fill='none'/%3E%3Cpath d='M2 50a48 48 0 0 0 96 0' fill='%23fff' stroke='%23222' stroke-width='4'/%3E%3Ccircle cx='50' cy='50' r='16' fill='%23fff' stroke='%23222' stroke-width='4'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23fff' stroke='%23222' stroke-width='3'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=21">
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -221,6 +221,19 @@
   </div>
 </div>
 
+<!-- Size modal -->
+<div id="size-modal-overlay" style="display:none"></div>
+<div id="size-modal" style="display:none">
+  <div class="size-modal-header">
+    <h3 id="size-modal-title">Select Size</h3>
+    <button id="size-modal-close">&#10005;</button>
+  </div>
+  <div class="size-modal-body">
+    <button class="size-modal-btn" id="size-modal-xxl">XXL</button>
+    <button class="size-modal-btn" id="size-modal-xxs">XXS</button>
+  </div>
+</div>
+
 <!-- Clear lists modal -->
 <div id="clear-modal-overlay" style="display:none"></div>
 <div id="clear-modal" style="display:none">
@@ -228,7 +241,13 @@
     <h3 id="clear-modal-title">Clear Lists</h3>
     <button id="clear-modal-close">&#10005;</button>
   </div>
-  <div class="clear-modal-body clear-modal-body-confirm">
+  <div class="clear-modal-body" id="clear-modal-select" style="display:none">
+    <button class="clear-modal-btn clear-modal-btn-danger" id="clear-modal-wanted">&#11088; Clear Wanted</button>
+    <button class="clear-modal-btn clear-modal-btn-danger" id="clear-modal-trade">&#8646; Clear Available</button>
+    <button class="clear-modal-btn clear-modal-btn-danger" id="clear-modal-all">Clear All</button>
+    <button class="clear-modal-btn" id="clear-modal-select-cancel">Cancel</button>
+  </div>
+  <div class="clear-modal-body clear-modal-body-confirm" id="clear-modal-confirm" style="display:none">
     <button class="clear-modal-btn" id="clear-modal-cancel">Cancel</button>
     <button class="clear-modal-btn clear-modal-btn-danger" id="clear-modal-ok">Clear</button>
   </div>

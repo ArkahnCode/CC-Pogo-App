@@ -183,6 +183,10 @@ authSignout.addEventListener('click', async () => {
   try {
     await auth.signOut();
     cloudLoaded = false;
+    localStorage.removeItem('cachedWanted');
+    localStorage.removeItem('cachedTrade');
+    localStorage.removeItem('cachedListName');
+    localStorage.removeItem('cachedListId');
     closeAuthModal();
     showToast('Signed out');
   } catch (e) {
@@ -299,7 +303,7 @@ function updateAccountUI() {
 // Cloud save / load
 // ─────────────────────────────────────────────
 let autoSaveTimer;
-let lastSavedState = { w: '', t: '' };
+let lastSavedState = { w: '', t: '', ln: '', lid: '' };
 let viewMode = false;
 let currentListName = '';
 let currentListId = '';
@@ -315,6 +319,31 @@ function setSaveIndicator(status) {
   saveIndicator.className = status; // 'saved', 'saving', 'error', or ''
 }
 
+function saveLocalCache() {
+  try {
+    localStorage.setItem('cachedWanted', encodeList(state.wanted));
+    localStorage.setItem('cachedTrade', encodeList(state.trade));
+    localStorage.setItem('cachedListName', currentListName || '');
+    localStorage.setItem('cachedListId', currentListId || '');
+  } catch (e) { /* quota exceeded — ignore */ }
+}
+
+function loadLocalCache() {
+  const w = localStorage.getItem('cachedWanted') || '';
+  const t = localStorage.getItem('cachedTrade') || '';
+  if (!w && !t) return false;
+  const allMap = new Map(state.all.map(p => [p.id, p.name]));
+  state.wanted = decodeList(w, allMap);
+  state.trade  = decodeList(t, allMap);
+  currentListName = localStorage.getItem('cachedListName') || '';
+  currentListId = localStorage.getItem('cachedListId') || '';
+  lastSavedState = { w, t, ln: currentListName, lid: currentListId };
+  renderList('wanted');
+  renderList('trade');
+  updatePickerHighlights();
+  return true;
+}
+
 async function saveToCloud() {
   if (!currentUser || viewMode) return;
   setSaveIndicator('saving');
@@ -326,34 +355,47 @@ async function saveToCloud() {
       wanted: w,
       trade: t,
       listName: currentListName || '',
+      activeListId: currentListId || '',
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
-    lastSavedState = { w, t, ln: currentListName || '' };
+    lastSavedState = { w, t, ln: currentListName || '', lid: currentListId || '' };
     setSaveIndicator('saved');
+    saveLocalCache();
   } catch (e) {
     console.warn('Save failed:', e.message);
     setSaveIndicator('error');
   }
 }
 
-async function loadFromCloud() {
+async function loadFromCloud(silent) {
   if (!currentUser) return;
   try {
     const doc = await db.collection('tradeLists').doc(currentUser.uid).get();
-    if (!doc.exists) { showToast('No saved list found'); return; }
+    if (!doc.exists) { if (!silent) showToast('No saved list found'); return; }
     const data = doc.data();
+    const w = data.wanted || '';
+    const t = data.trade || '';
+    const ln = data.listName || '';
+    const lid = data.activeListId || '';
+    // Skip re-render if local cache already matches
+    if (silent && w === lastSavedState.w && t === lastSavedState.t && ln === lastSavedState.ln && lid === lastSavedState.lid) {
+      setSaveIndicator('saved');
+      return;
+    }
     const allMap = new Map(state.all.map(p => [p.id, p.name]));
-    state.wanted = decodeList(data.wanted, allMap);
-    state.trade  = decodeList(data.trade, allMap);
+    state.wanted = decodeList(w, allMap);
+    state.trade  = decodeList(t, allMap);
     renderList('wanted');
     renderList('trade');
     updatePickerHighlights();
-    currentListName = data.listName || '';
-    lastSavedState = { w: data.wanted || '', t: data.trade || '', ln: data.listName || '' };
+    currentListName = ln;
+    currentListId = lid;
+    lastSavedState = { w, t, ln, lid };
     setSaveIndicator('saved');
-    showToast('Loaded from cloud!');
+    saveLocalCache();
+    if (!silent) showToast('Loaded from cloud!');
   } catch (e) {
-    showToast('Load failed: ' + e.message);
+    if (!silent) showToast('Load failed: ' + e.message);
   }
 }
 
@@ -366,7 +408,8 @@ function scheduleAutoSave() {
     const w = encodeList(state.wanted);
     const t = encodeList(state.trade);
     const ln = currentListName || '';
-    if (w === lastSavedState.w && t === lastSavedState.t && ln === lastSavedState.ln) return;
+    const lid = currentListId || '';
+    if (w === lastSavedState.w && t === lastSavedState.t && ln === lastSavedState.ln && lid === lastSavedState.lid) return;
     saveToCloud();
   }, 2000);
 }
@@ -566,6 +609,7 @@ function loadSavedList(docId, data) {
   updatePickerHighlights();
   currentListName = data.name || '';
   currentListId = docId;
+  scheduleAutoSave();
   closeSettings();
   showToast(`Loaded "${data.name}"`);
 }
@@ -658,7 +702,7 @@ auth.onAuthStateChanged(async user => {
     const params = new URLSearchParams(window.location.search);
     if (!params.has('list') && !params.has('view') && !cloudLoaded) {
       cloudLoaded = true;
-      await loadFromCloud();
+      await loadFromCloud(true);
     }
   }
 });
@@ -724,6 +768,8 @@ async function fetchExclusiveMoves() {
     const res = await fetch('Resources/exclusive_moves.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     exclusiveMovesData = await res.json();
+    renderList('wanted');
+    renderList('trade');
   } catch (e) { console.warn('Failed to load exclusive moves:', e); }
 }
 
@@ -1707,6 +1753,7 @@ async function fetchPokemon() {
     const data = await res.json();
     const POKE_NAME_OVERRIDE = { 29: 'nidoran\u2640', 32: 'nidoran\u2642', 386: 'deoxys', 487: 'giratina', 492: 'shaymin', 550: 'basculin', 641: 'tornadus', 642: 'thundurus', 645: 'landorus', 647: 'keldeo', 648: 'meloetta', 668: 'pyroar', 678: 'meowstic', 681: 'aegislash', 710: 'pumpkaboo', 711: 'gourgeist', 718: 'zygarde', 741: 'oricorio', 745: 'lycanroc', 746: 'wishiwashi', 774: 'minior', 778: 'mimikyu', 849: 'toxtricity', 875: 'eiscue', 876: 'indeedee', 877: 'morpeko', 892: 'urshifu', 902: 'basculegion', 905: 'enamorus', 916: 'oinkologne', 925: 'maushold', 978: 'tatsugiri' };
     state.all = data.results.map((p, i) => ({ id: i + 1, name: POKE_NAME_OVERRIDE[i + 1] || p.name }));
+    loadLocalCache();
     applyFilter();
     loadFromURL();
     resolvePokemonLoaded();
@@ -2023,7 +2070,7 @@ function addToList(list) {
   if (!state.pendingId) return;
   const arr  = state[list];
   const form = state.pendingForm;
-  arr.push({ id: state.pendingId, name: state.pendingName, shiny: false, bg: '', dynamax: false, purified: false, form });
+  arr.push({ id: state.pendingId, name: state.pendingName, shiny: false, bg: '', dynamax: false, purified: false, size: '', form });
   renderList(list);
   updatePickerHighlights();
   scheduleAutoSave();
@@ -2100,6 +2147,47 @@ function toggleBg(list, idx) {
 const etmOverlay = document.getElementById('etm-overlay');
 const etmModal   = document.getElementById('etm-modal');
 const etmBody    = document.getElementById('etm-body');
+// ── Size modal ──
+let sizeState = null; // { list, idx }
+const sizeOverlay = document.getElementById('size-modal-overlay');
+const sizeModal = document.getElementById('size-modal');
+
+function openSizeModal(list, idx) {
+  const entry = state[list][idx];
+  sizeState = { list, idx };
+  document.getElementById('size-modal-title').textContent = `${entry.name.charAt(0).toUpperCase() + entry.name.slice(1)} — Size`;
+  document.getElementById('size-modal-xxs').className = 'size-modal-btn' + (entry.size === 'XXS' ? ' active' : '');
+  document.getElementById('size-modal-xxl').className = 'size-modal-btn' + (entry.size === 'XXL' ? ' active' : '');
+  sizeOverlay.style.display = '';
+  sizeModal.style.display = '';
+  sizeOverlay.classList.add('open');
+  sizeModal.classList.add('open');
+}
+
+function closeSizeModal() {
+  sizeOverlay.classList.remove('open');
+  sizeModal.classList.remove('open');
+  sizeOverlay.style.display = 'none';
+  sizeModal.style.display = 'none';
+  sizeState = null;
+}
+
+function setSize(size) {
+  if (!sizeState) return;
+  const list = sizeState.list;
+  const entry = state[list][sizeState.idx];
+  entry.size = entry.size === size ? '' : size;
+  closeSizeModal();
+  renderList(list);
+  scheduleAutoSave();
+}
+
+document.getElementById('size-modal-close').addEventListener('click', closeSizeModal);
+sizeOverlay.addEventListener('click', closeSizeModal);
+document.getElementById('size-modal-xxs').addEventListener('click', () => setSize('XXS'));
+document.getElementById('size-modal-xxl').addEventListener('click', () => setSize('XXL'));
+
+
 const etmTitle   = document.getElementById('etm-title');
 let etmState = null; // { list, idx }
 
@@ -2185,7 +2273,7 @@ function openCardDetail(p) {
   } else {
     html += `<img class="pokemon-sprite" src="${spriteUrl(p.id, form, p.shiny)}" alt="${escapeHtml(p.name)}" width="180" height="180">`;
   }
-  html += `<div class="cd-name">${escapeHtml(capName)}</div>`;
+  html += `<div class="cd-name">${escapeHtml(capName)}${p.size ? ` <span class="cd-size">${p.size}</span>` : ''}</div>`;
   if (formLabel) html += `<div class="cd-form">${escapeHtml(formLabel)}</div>`;
 
   // Indicators row (purified + shiny)
@@ -2307,8 +2395,6 @@ bgPickerRemove.addEventListener('click', () => {
 
 function clearList(list) {
   state[list] = [];
-  currentListName = '';
-  currentListId = '';
   renderList(list);
   updatePickerHighlights();
   scheduleAutoSave();
@@ -2359,7 +2445,9 @@ function renderList(list) {
       ${canPurify ? `<button class="purified-btn${p.purified ? ' active' : ''}" title="Purified"><img src="Resources/purified.png?v=2" alt="Purified"></button>` : ''}
       ${!NO_SHINY_FORMS.has(formId) ? `<button class="shiny-btn${p.shiny ? ' active' : ''}" title="${p.shiny ? 'Remove shiny' : 'Mark shiny'}">&#10024;</button>` : ''}
       ${hasDynamax ? `<button class="dynamax-btn${p.dynamax ? ' active' : ''}" title="${p.dynamax ? 'Remove Dynamax' : 'Mark Dynamax'}">&#9729;</button>` : ''}
+      <button class="size-btn${p.size ? ' active' : ''}" title="Size (XXS/XXL)">${p.size ? p.size : '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M1 23L23 1v22H1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M7 23l0-4M11 23l0-8M15 23l0-4M19 23l0-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'}</button>
       ${hasEtm ? `<button class="etm-btn${etmActive ? ' active' : ''}" title="Exclusive moves"><img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM"></button>` : ''}
+      ${p.size ? `<span class="size-indicator" title="${p.size}">${p.size}</span>` : ''}
       ${p.purified ? `<span class="purified-indicator" title="Purified"><img src="Resources/purified.png?v=2" alt="Purified"></span>` : ''}
       ${p.shiny ? `<span class="shiny-indicator" title="Shiny">&#10024;</span>` : ''}
       ${etmActive ? `<span class="etm-indicator" title="${escapeHtml(p.etm.join(', '))}"><img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM"></span>` : ''}
@@ -2374,6 +2462,8 @@ function renderList(list) {
     if (shinyBtn) shinyBtn.addEventListener('click', () => toggleShiny(list, idx));
     const dynBtn = card.querySelector('.dynamax-btn');
     if (dynBtn) dynBtn.addEventListener('click', () => toggleDynamax(list, idx));
+    const sizeBtn = card.querySelector('.size-btn');
+    if (sizeBtn) sizeBtn.addEventListener('click', () => openSizeModal(list, idx));
     const etmBtn = card.querySelector('.etm-btn');
     if (etmBtn) etmBtn.addEventListener('click', () => openEtmModal(list, idx));
     const bgBtn = card.querySelector('.bg-btn');
@@ -2430,6 +2520,7 @@ function encodeList(arr) {
     const b = p.bg ? 'b' : '';
     const d = p.dynamax ? 'd' : '';
     const pu = p.purified ? 'p' : '';
+    const sz = p.size === 'XXS' ? 'x' : p.size === 'XXL' ? 'X' : '';
     const f = p.form ? `-${p.form.slice(1)}` : '';
     const bgSlug = p.bg ? `~${p.bg}` : '';
     // Encode ETM moves as indices: !0.2 means moves at index 0 and 2
@@ -2442,7 +2533,7 @@ function encodeList(arr) {
         if (indices.length > 0) etmPart = `!${indices.join('.')}`;
       }
     }
-    return `${p.id}${s}${b}${d}${pu}${etmPart}${f}${bgSlug}`;
+    return `${p.id}${s}${b}${d}${pu}${sz}${etmPart}${f}${bgSlug}`;
   }).join(',');
 }
 
@@ -2460,6 +2551,9 @@ function decodeList(str, allMap) {
     let etmIndices = '';
     const bang = idPart.indexOf('!');
     if (bang >= 0) { etmIndices = idPart.slice(bang + 1); idPart = idPart.slice(0, bang); }
+    let size = '';
+    if (idPart.endsWith('x')) { size = 'XXS'; idPart = idPart.slice(0, -1); }
+    else if (idPart.endsWith('X')) { size = 'XXL'; idPart = idPart.slice(0, -1); }
     const purified = idPart.endsWith('p');
     if (purified) idPart = idPart.slice(0, -1);
     const dynamax = idPart.endsWith('d');
@@ -2487,7 +2581,7 @@ function decodeList(str, allMap) {
         etm = etmIndices.split('.').map(i => allMoves[parseInt(i)]).filter(Boolean);
       }
     }
-    return [{ id, name, shiny, bg, dynamax, purified, form, etm }];
+    return [{ id, name, shiny, bg, dynamax, purified, size, form, etm }];
   });
 }
 
@@ -2588,29 +2682,27 @@ document.getElementById('search').addEventListener('input', () => {
 document.getElementById('gen-filter').addEventListener('change', applyFilter);
 document.getElementById('clear-wanted').addEventListener('click', () => {
   if (state.wanted.length === 0) return;
-  openClearConfirm('Clear Wanted list?', () => { clearList('wanted'); showToast('Wanted list cleared'); });
+  openClearConfirm('Clear Wanted?', () => { clearList('wanted'); showToast('Wanted list cleared'); });
 });
 document.getElementById('clear-trade').addEventListener('click', () => {
   if (state.trade.length === 0) return;
-  openClearConfirm('Clear Available list?', () => { clearList('trade'); showToast('Available list cleared'); });
+  openClearConfirm('Clear Available?', () => { clearList('trade'); showToast('Available list cleared'); });
 });
 document.getElementById('clear-all-wanted').addEventListener('click', () => {
   if (state.wanted.length === 0 && state.trade.length === 0) return;
-  openClearConfirm('Clear both lists?', () => { clearList('wanted'); clearList('trade'); showToast('All lists cleared'); });
+  openClearConfirm('Clear Wanted and Available?', () => { clearList('wanted'); clearList('trade'); showToast('All lists cleared'); });
 });
 document.getElementById('clear-all-trade').addEventListener('click', () => {
   if (state.wanted.length === 0 && state.trade.length === 0) return;
-  openClearConfirm('Clear both lists?', () => { clearList('wanted'); clearList('trade'); showToast('All lists cleared'); });
+  openClearConfirm('Clear Wanted and Available?', () => { clearList('wanted'); clearList('trade'); showToast('All lists cleared'); });
 });
 
-// ── Clear confirm modal ──
+// ── Clear modal ──
 const clearModalOverlay = document.getElementById('clear-modal-overlay');
 const clearModal = document.getElementById('clear-modal');
 let clearConfirmCallback = null;
 
-function openClearConfirm(title, onConfirm) {
-  document.getElementById('clear-modal-title').textContent = title;
-  clearConfirmCallback = onConfirm;
+function showClearModal() {
   clearModalOverlay.style.display = '';
   clearModal.style.display = '';
   clearModalOverlay.classList.add('open');
@@ -2623,17 +2715,43 @@ function closeClearModal() {
   clearModal.style.display = 'none';
   clearConfirmCallback = null;
 }
+function openClearConfirm(title, onConfirm) {
+  document.getElementById('clear-modal-title').textContent = title;
+  clearConfirmCallback = onConfirm;
+  document.getElementById('clear-modal-select').style.display = 'none';
+  document.getElementById('clear-modal-confirm').style.display = '';
+  showClearModal();
+}
+function openClearSelect() {
+  document.getElementById('clear-modal-title').textContent = 'Clear Lists';
+  clearConfirmCallback = null;
+  document.getElementById('clear-modal-select').style.display = '';
+  document.getElementById('clear-modal-confirm').style.display = 'none';
+  showClearModal();
+}
 
 document.getElementById('lists-clear-btn').addEventListener('click', () => {
   if (state.wanted.length === 0 && state.trade.length === 0) return;
-  openClearConfirm('Clear all lists?', () => { clearList('wanted'); clearList('trade'); showToast('All lists cleared'); });
+  openClearSelect();
 });
 document.getElementById('clear-modal-close').addEventListener('click', closeClearModal);
 document.getElementById('clear-modal-cancel').addEventListener('click', closeClearModal);
+document.getElementById('clear-modal-select-cancel').addEventListener('click', closeClearModal);
 clearModalOverlay.addEventListener('click', closeClearModal);
 document.getElementById('clear-modal-ok').addEventListener('click', () => {
   if (clearConfirmCallback) clearConfirmCallback();
   closeClearModal();
+});
+document.getElementById('clear-modal-wanted').addEventListener('click', () => {
+  if (state.wanted.length === 0) { showToast('Wanted list is empty'); closeClearModal(); return; }
+  openClearConfirm('Clear Wanted?', () => { clearList('wanted'); showToast('Wanted list cleared'); });
+});
+document.getElementById('clear-modal-trade').addEventListener('click', () => {
+  if (state.trade.length === 0) { showToast('Available list is empty'); closeClearModal(); return; }
+  openClearConfirm('Clear Available?', () => { clearList('trade'); showToast('Available list cleared'); });
+});
+document.getElementById('clear-modal-all').addEventListener('click', () => {
+  openClearConfirm('Clear Wanted and Available?', () => { clearList('wanted'); clearList('trade'); showToast('All lists cleared'); });
 });
 
 // ─────────────────────────────────────────────
