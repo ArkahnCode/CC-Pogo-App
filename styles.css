@@ -403,7 +403,7 @@ body.dark-mode .clear-modal-btn-danger:hover { background: #5a2838; }
 .etm-btn:hover { opacity: 0.65; }
 .etm-btn.active { filter: none; opacity: 1; }
 .shiny-indicator {
-  position: absolute; z-index: 4; top: 64%; right: 6px;
+  position: absolute; z-index: 4; top: 64%; right: 4px;
   width: 26px; height: 26px;
   display: none; align-items: center; justify-content: center;
   pointer-events: auto; cursor: default;
@@ -421,7 +421,7 @@ body.view-mode .shiny-indicator { display: flex; }
 .etm-indicator img { width: 22px; height: 22px; display: block; }
 body.view-mode .etm-indicator { display: flex; }
 .purified-indicator {
-  position: absolute; z-index: 4; top: 64%; left: 6px;
+  position: absolute; z-index: 4; top: 64%; left: 4px;
   width: 26px; height: 26px;
   display: none; align-items: center; justify-content: center;
   pointer-events: auto; cursor: default;
@@ -1434,16 +1434,22 @@ body.dark-mode .saved-list-delete:hover { color: #FF6B6B; background: rgba(255,1
     gap: 6px; padding: 8px;
   }
   .list-card { padding: 8px 4px 4px; border-radius: 16px; min-height: 132px; }
+  .list-card .bg-badge { border-radius: 13px 13px 0 0; }
+  .list-card .bg-badge img { border-radius: 13px 13px 0 0; }
   .list-card > img, .list-card .sprite-wrap img { width: 64px; height: 64px; }
   .list-card .sprite-wrap { width: 64px; height: 64px; overflow: visible; }
   .list-card.gigantamax .sprite-wrap img { width: 56px; height: 56px; margin: 6px auto 0; }
   .list-card .cloud-overlay { left: -4px; right: -4px; top: -3px; height: 20px; }
   .list-card .pname { font-size: 0.78rem; height: 28px; line-height: 28px; }
-  .form-badge { font-size: 0.48rem; margin-top: 0px; max-width: 90%; }
-  .card-label-area { padding: 0 28px; }
-  .purified-indicator { width: 22px; height: 22px; }
-  .purified-indicator img { width: 16px; height: 16px; }
-  .shiny-indicator { width: 22px; height: 22px; font-size: 14px; }
+  .form-badge { font-size: 0.45rem; max-width: 90%; margin: 0 auto; padding: 1px 4px; }
+  .card-label-area { padding: 0 28px; top: 58%; height: 25%; justify-content: space-between; }
+  .size-btn { top: 58%; }
+  .etm-btn { top: 58%; }
+  .list-card .purified-btn { left: 2px; }
+  .list-card .shiny-btn { right: 2px; }
+  .list-card .purified-indicator { width: 22px; height: 22px; top: 58%; left: 5px; }
+  .list-card .purified-indicator img { width: 16px; height: 16px; }
+  .list-card .shiny-indicator { width: 22px; height: 22px; font-size: 14px; top: 58%; right: 5px; }
   .etm-indicator img { width: 18px; height: 18px; }
   .size-indicator { font-size: 9px; padding: 1px 3px; }
   .size-btn svg { width: 10px; height: 10px; }
@@ -1454,8 +1460,9 @@ body.dark-mode .saved-list-delete:hover { color: #FF6B6B; background: rgba(255,1
   /* Tighten mobile button edges */
   .list-card .size-btn { left: 2px; }
   .list-card .etm-btn { right: 2px; }
-  .list-card .dynamax-btn { left: 2px; }
-  .list-card .bg-btn { right: 2px; }
+  .list-card .dynamax-btn { left: 2px; top: 80%; }
+  .list-card .bg-btn { right: 2px; top: 80%; }
+  .list-card .remove-btn { top: 80%; }
   .clear-btn { padding: 6px 14px; font-size: 0.78rem; min-height: 36px; }
 
   /* Background picker mobile */
