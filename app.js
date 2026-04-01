@@ -183,6 +183,14 @@ authSignout.addEventListener('click', async () => {
   try {
     await auth.signOut();
     cloudLoaded = false;
+    state.wanted = [];
+    state.trade = [];
+    currentListName = '';
+    currentListId = '';
+    lastSavedState = { w: '', t: '', ln: '', lid: '' };
+    renderList('wanted');
+    renderList('trade');
+    updatePickerHighlights();
     localStorage.removeItem('cachedWanted');
     localStorage.removeItem('cachedTrade');
     localStorage.removeItem('cachedListName');
@@ -400,7 +408,9 @@ async function loadFromCloud(silent) {
 }
 
 function scheduleAutoSave() {
-  if (!currentUser || viewMode) return;
+  if (viewMode) return;
+  saveLocalCache();
+  if (!currentUser) return;
   const autosaveToggle = document.getElementById('autosave-toggle');
   if (!autosaveToggle.checked) return;
   clearTimeout(autoSaveTimer);
@@ -501,6 +511,7 @@ function exitViewMode() {
 
 document.getElementById('copy-to-mine').addEventListener('click', () => {
   exitViewMode();
+  saveLocalCache();
   scheduleAutoSave();
   showToast('Copied to your list!');
 });
@@ -579,7 +590,7 @@ async function renderSavedLists() {
       name.className = 'saved-list-name';
       name.textContent = data.name;
       name.title = 'Click to load';
-      name.addEventListener('click', () => loadSavedList(doc.id, data));
+      name.addEventListener('click', () => loadSavedListFresh(doc.id));
       const rename = document.createElement('button');
       rename.className = 'saved-list-rename';
       rename.innerHTML = '&#9998;';
@@ -614,8 +625,22 @@ function loadSavedList(docId, data) {
   showToast(`Loaded "${data.name}"`);
 }
 
+async function loadSavedListFresh(docId) {
+  if (!currentUser) return;
+  try {
+    const doc = await db.collection('tradeLists').doc(currentUser.uid)
+      .collection('savedLists').doc(docId).get();
+    if (!doc.exists) { showToast('List not found'); return; }
+    loadSavedList(docId, doc.data());
+  } catch (e) {
+    showToast('Load failed: ' + e.message);
+  }
+}
+
+let _deleteConfirmCleanup = null;
 function deleteSavedList(docId, name) {
   if (!currentUser) return;
+  if (_deleteConfirmCleanup) _deleteConfirmCleanup();
   const overlay = document.getElementById('delete-confirm-overlay');
   const modal = document.getElementById('delete-confirm-modal');
   document.getElementById('delete-confirm-title').textContent = `Delete "${name}"?`;
@@ -633,13 +658,19 @@ function deleteSavedList(docId, name) {
     document.getElementById('delete-confirm-cancel').removeEventListener('click', close);
     document.getElementById('delete-confirm-close').removeEventListener('click', close);
     overlay.removeEventListener('click', close);
+    _deleteConfirmCleanup = null;
   }
+  _deleteConfirmCleanup = close;
 
   async function onOk() {
     close();
     try {
       await db.collection('tradeLists').doc(currentUser.uid)
         .collection('savedLists').doc(docId).delete();
+      if (currentListId === docId) {
+        currentListId = '';
+        currentListName = '';
+      }
       showToast(`"${name}" deleted`);
       renderSavedLists();
     } catch (e) {
@@ -678,6 +709,7 @@ function renameSavedList(docId, currentName) {
     try {
       await db.collection('tradeLists').doc(currentUser.uid)
         .collection('savedLists').doc(docId).update({ name: newName });
+      if (currentListId === docId) currentListName = newName;
       showToast(`Renamed to "${newName}"`);
       renderSavedLists();
     } catch (e) {
@@ -762,16 +794,16 @@ const TYPE_COLORS = {
 
 // exclusiveMovesData: loaded from JSON, keyed by Pokemon ID string
 let exclusiveMovesData = {};
+let exclusiveMovesReady = null;
 
 async function fetchExclusiveMoves() {
   try {
     const res = await fetch('Resources/exclusive_moves.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     exclusiveMovesData = await res.json();
-    renderList('wanted');
-    renderList('trade');
   } catch (e) { console.warn('Failed to load exclusive moves:', e); }
 }
+exclusiveMovesReady = fetchExclusiveMoves();
 
 // Get exclusive moves for a Pokemon ID + form key
 // Returns { fast: [...], charged: [...] } or null if none
@@ -812,7 +844,7 @@ function cardBg(id) {
   const c1 = lightenHex(TYPE_COLORS[types[0]] || '#aab09f');
   if (!types[1] || types[1] === types[0]) return c1;
   const c2 = lightenHex(TYPE_COLORS[types[1]] || '#aab09f');
-  return `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`;
+  return `linear-gradient(135deg, ${c1} 30%, ${c2} 70%)`;
 }
 
 async function fetchTypeMap() {
@@ -941,179 +973,180 @@ const GO_AVAILABLE = new Set([
 // Source: https://www.serebii.net/pokemongo/backgrounds.shtml
 // ─────────────────────────────────────────────
 const BACKGROUNDS=[
-{name:'GO Tour Las Vegas',slug:'gotourlasvegas',pokemon:[382,383]},
-{name:'Air Adventures Jeju Island',slug:'airadventuresjejuisland',pokemon:[380,381]},
-{name:'GO Fest Osaka',slug:'gofestosaka',pokemon:[384,488,716,717]},
-{name:'GO Fest London',slug:'gofestlondon',pokemon:[384,488,716,717]},
-{name:'GO Fest New York City',slug:'gofestnewyorkcity',pokemon:[384,488,716,717]},
-{name:'City Safari Seoul',slug:'citysafariseoul',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Barcelona',slug:'citysafaribarcelona',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Mexico City',slug:'citysafarimexicocity',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'GO Tour Los Angeles',slug:'gotourlosangeles',pokemon:[483,484]},
-{name:'Air Adventures Bali',slug:'airadventuresbali',pokemon:[380,381]},
-{name:'City Safari Tainan',slug:'citysafaritainan',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'Air Adventures Surabaya',slug:'airadventuressurabaya',pokemon:[380,381]},
-{name:'GO Fest Sendai',slug:'gofestsendai',pokemon:[791,792,793,796,798,799,800,805]},
-{name:'GO Fest Madrid',slug:'gofestmadrid',pokemon:[791,792,793,794,798,799,800,805]},
-{name:'GO Fest New York City 2024',slug:'gofestnewyorkcity2024',pokemon:[791,792,793,794,798,799,800,806]},
-{name:'2024 Pokemon World Championships',slug:'2024pokemonworldchampionships',pokemon:[25]},
-{name:'Air Adventures Yogyakarta',slug:'airadventuresyogyakarta',pokemon:[380,381]},
-{name:'MLB Marlins',slug:'mlbmarlins',pokemon:[25]},
-{name:'MLB Mariners',slug:'mlbmariners',pokemon:[25]},
-{name:'Air Adventures Jakarta',slug:'airadventuresjakarta',pokemon:[380,381]},
-{name:'Safari Zone Incheon',slug:'safarizoneincheon',pokemon:[25,672]},
-{name:'GO Wild Area Fukuoka',slug:'gowildareafukuoka',pokemon:[483,484,849]},
-{name:'City Safari Hong Kong',slug:'citysafarihongkong',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Sao Paulo',slug:'citysafarisaopaulo',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'GO Tour New Taipei City',slug:'gotournewtaipeicity',pokemon:[643,644,646]},
-{name:'GO Tour Unova Los Angeles',slug:'gotourunovalosangeles',pokemon:[643,644,646]},
-{name:'City Safari Singapore',slug:'citysafarisingapore',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Mumbai',slug:'citysafarimumbai',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Milan',slug:'citysafarimilan',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Santiago',slug:'citysafarisantiago',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'Spring Blossom Festival',slug:'springblossomfestival',pokemon:[25,585]},
-{name:'Expo 2025 - Osaka',slug:'expo2025-osaka',pokemon:[25]},
-{name:'Expo 2025 - Osaka 2',slug:'expo2025-osaka2',pokemon:[1,4,7]},
-{name:'Suita City',slug:'suitacity',pokemon:[25]},
-{name:'GO Fest 2025 Osaka',slug:'gofest2025osaka',pokemon:[812,888,889]},
-{name:'GO Fest 2025 Jersey City',slug:'gofest2025jerseycity',pokemon:[815,888,889]},
-{name:'GO Fest 2025 Paris',slug:'gofest2025paris',pokemon:[4,818,888,889]},
-{name:'Lotte Giants',slug:'lottegiants',pokemon:[25]},
-{name:'Seattle Mariners',slug:'seattlemariners',pokemon:[25]},
-{name:'Road Trip 2025 Manchester',slug:'roadtrip2025manchester',pokemon:[25]},
-{name:'Miami Marlins',slug:'miamimarlins',pokemon:[25]},
-{name:'Road Trip 2025 London',slug:'roadtrip2025london',pokemon:[25]},
-{name:'Tampa Bay Rays',slug:'tampabayrays',pokemon:[25]},
-{name:'Milwaukee Brewers',slug:'milwaukeebrewers',pokemon:[25]},
-{name:'Road Trip 2025 Paris',slug:'roadtrip2025paris',pokemon:[25]},
-{name:'Jangheung Water Festival',slug:'jangheungwaterfestival',pokemon:[25,131,585]},
-{name:'Road Trip 2025 Valencia',slug:'roadtrip2025valencia',pokemon:[25]},
-{name:'Washington Nationals',slug:'washingtonnationals',pokemon:[25]},
-{name:'Road Trip 2025 Berlin',slug:'roadtrip2025berlin',pokemon:[25]},
-{name:'Arizona Diamondbacks',slug:'arizonadiamondbacks',pokemon:[25]},
-{name:'Chicago White Sox',slug:'chicagowhitesox',pokemon:[25]},
-{name:'Baltimore Orioles',slug:'baltimoreorioles',pokemon:[25]},
-{name:'Cleveland Guardians',slug:'clevelandguardians',pokemon:[25]},
-{name:'2025 Pokemon World Championships',slug:'2025pokemonworldchampionships',pokemon:[25]},
-{name:'Road Trip 2025 The Hague',slug:'roadtrip2025thehague',pokemon:[25]},
-{name:'Road Trip 2025 Cologne',slug:'roadtrip2025cologne',pokemon:[25]},
-{name:'New York Mets',slug:'newyorkmets',pokemon:[25]},
-{name:'Boston Red Sox',slug:'bostonredsox',pokemon:[25]},
-{name:'San Francisco Giants',slug:'sanfranciscogiants',pokemon:[25]},
-{name:'Minnesota Twins',slug:'minnesotatwins',pokemon:[25]},
-{name:'Texas Rangers',slug:'texasrangers',pokemon:[25]},
-{name:'Mega Evolution Paris',slug:'megaevolutionparis',pokemon:[4]},
-{name:'Mega Evolution Paris 2',slug:'megaevolutionparis2',pokemon:[4]},
-{name:'City Safari Bangkok',slug:'citysafaribangkok',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Amsterdam',slug:'citysafariamsterdam',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Valencia',slug:'citysafarivalencia',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Cancun',slug:'citysafaricancun',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Vancouver',slug:'citysafarivancouver',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'Pokemon GO at Jeju Island',slug:'pokemongoatjejuisland',pokemon:[25]},
-{name:'GO Wild Area Nagasaki',slug:'gowildareanagasaki',pokemon:[488,491,760,861]},
-{name:"Taipei Children's Amusement Park",slug:"taipeichildren'samusementpark",pokemon:[131]},
-{name:'Busan Fireworks Festival',slug:'busanfireworksfestival',pokemon:[25]},
-{name:'PokePark Kanto',slug:'pokeparkkanto',pokemon:[25,144,145,146]},
-{name:'Carnival Flamigo Cologne',slug:'carnivalflamigocologne',pokemon:[973]},
-{name:'Carnival Flamigo Rio',slug:'carnivalflamigorio',pokemon:[973]},
-{name:'GO Tour 2026 Tainan',slug:'gotour2026tainan',pokemon:[6,71,130,181,254,282,334,359,373,445,448,679,686,716,717]},
-{name:'GO Tour 2026 Los Angeles',slug:'gotour2026losangeles',pokemon:[6,71,130,181,254,282,334,359,373,445,448,679,686,716,717]},
-{name:'Pyeongchang Winter Festival',slug:'pyeongchangwinterfestival',pokemon:[25,585]},
-{name:'City Safari Sydney',slug:'citysafarisydney',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Miami',slug:'citysafarimiami',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'City Safari Buenos Aires',slug:'citysafaribuenosaires',pokemon:[133,134,135,136,196,197,470,471,700]},
-{name:'NFL Cardinals',slug:'nflcardinals',pokemon:[25]},
-{name:'Pokelid Okinawa',slug:'pokelidokinawa',pokemon:[25]},
-{name:'Pokelid Fukuoka',slug:'pokelidfukuoka',pokemon:[25]},
-{name:'Pokelid Kagoshima',slug:'pokelidkagoshima',pokemon:[25]},
-{name:'Pokelid Miyazaki',slug:'pokelidmiyazaki',pokemon:[25]},
-{name:'Pokelid Nagasaki',slug:'pokelidnagasaki',pokemon:[25,181]},
-{name:'Pokelid Saga',slug:'pokelidsaga',pokemon:[25]},
-{name:'Pokelid Aichi',slug:'pokelidaichi',pokemon:[25]},
-{name:'Pokelid Akita',slug:'pokelidakita',pokemon:[25]},
-{name:'Pokelid Aomori',slug:'pokelidaomori',pokemon:[25]},
-{name:'Pokelid Chiba',slug:'pokelidchiba',pokemon:[25]},
-{name:'Pokelid Fukui',slug:'pokelidfukui',pokemon:[25]},
-{name:'Pokelid Fukushima',slug:'pokelidfukushima',pokemon:[25]},
-{name:'Pokelid Gifu',slug:'pokelidgifu',pokemon:[25]},
-{name:'Pokelid Hokkaido',slug:'pokelidhokkaido',pokemon:[25]},
-{name:'Pokelid Hyogo',slug:'pokelidhyogo',pokemon:[25]},
-{name:'Pokelid Ibaraki',slug:'pokelidibaraki',pokemon:[25]},
-{name:'Pokelid Ishikawa',slug:'pokelidishikawa',pokemon:[25]},
-{name:'Pokelid Iwate',slug:'pokelidiwate',pokemon:[25]},
-{name:'Pokelid Kanagawa',slug:'pokelidkanagawa',pokemon:[25]},
-{name:'Pokelid Kyoto',slug:'pokelidkyoto',pokemon:[25]},
-{name:'Pokelid Mie',slug:'pokelidmie',pokemon:[25]},
-{name:'Pokelid Miyagi',slug:'pokelidmiyagi',pokemon:[25]},
-{name:'Pokelid Nara',slug:'pokelidnara',pokemon:[25]},
-{name:'Pokelid Niigata',slug:'pokelidniigata',pokemon:[25]},
-{name:'Pokelid Osaka',slug:'pokelidosaka',pokemon:[25]},
-{name:'Pokelid Saitama',slug:'pokelidsaitama',pokemon:[25]},
-{name:'Pokelid Shiga',slug:'pokelidshiga',pokemon:[25]},
-{name:'Pokelid Shizuoka',slug:'pokelidshizuoka',pokemon:[25]},
-{name:'Pokelid Tochigi',slug:'pokelidtochigi',pokemon:[25]},
-{name:'Pokelid Tokyo',slug:'pokelidtokyo',pokemon:[25]},
-{name:'Pokelid Toyama',slug:'pokelidtoyama',pokemon:[25]},
-{name:'Pokelid Wakayama',slug:'pokelidwakayama',pokemon:[25]},
-{name:'Pokelid Ehime',slug:'pokelidehime',pokemon:[25]},
-{name:'Pokelid Kagawa',slug:'pokelidkagawa',pokemon:[25]},
-{name:'Pokelid Kochi',slug:'pokelidkochi',pokemon:[25]},
-{name:'Pokelid Okayama',slug:'pokelidokayama',pokemon:[25]},
-{name:'Pokelid Shimane',slug:'pokelidshimane',pokemon:[25]},
-{name:'Pokelid Tokushima',slug:'pokelidtokushima',pokemon:[25]},
-{name:'Pokelid Tottori',slug:'pokelidtottori',pokemon:[25]},
-{name:'Pokelid Yamaguchi',slug:'pokelidyamaguchi',pokemon:[25]},
-{name:'GO Fest 2024 Wormhole',slug:'gofest2024wormhole',pokemon:[793,794,795,796,797,798,799,800,805,806]},
-{name:'GO Fest 2024 Radiance',slug:'gofest2024radiance',pokemon:[791]},
-{name:'GO Fest 2024 Umbra',slug:'gofest2024umbra',pokemon:[792]},
-{name:'GO Fest 2024 Wormhole Radiance',slug:'gofest2024wormholeradiance',pokemon:[800]},
-{name:'GO Fest 2024 Wormhole Umbra',slug:'gofest2024wormholeumbra',pokemon:[800]},
-{name:'Team Valor',slug:'teamvalor',pokemon:[77]},
-{name:'Team Instinct',slug:'teaminstinct',pokemon:[239]},
-{name:'Team Mystic',slug:'teammystic',pokemon:[131]},
-{name:'GO Wild Area 2024',slug:'gowildarea2024',pokemon:[382,383,483,484,849]},
-{name:'Community Day 2024',slug:'communityday2024',pokemon:[56,69,77,113,137,155,371,374,540,602,704,722,725,728,761]},
-{name:'Dual Destiny',slug:'dualdestiny',pokemon:[280,588,616,906]},
-{name:'GO Tour Enigma',slug:'gotourenigma',pokemon:[509,519,525,527,532,535,551,554,555,559,561,595,597,599]},
-{name:'GO Tour Unova Black',slug:'gotourunovablack',pokemon:[495,498,501,638,639,640,641,643,644,645,646,649]},
-{name:'GO Tour Unova White',slug:'gotourunovawhite',pokemon:[495,498,501,638,639,640,642,643,644,645,646,649]},
-{name:'GO Tour Unova Black White',slug:'gotourunovablackwhite',pokemon:[646]},
-{name:'Might and Mastery',slug:'mightandmastery',pokemon:[66,158,307,434,582,747,909,921,935]},
-{name:'Delightful Days',slug:'delightfuldays',pokemon:[131,133,144,145,782,812,815,818,821,823,912]},
-{name:'Ancients Recovered Regirock',slug:'ancientsrecoveredregirock',pokemon:[377]},
-{name:'Ancients Recovered Regice',slug:'ancientsrecoveredregice',pokemon:[378]},
-{name:'Ancients Recovered Registeel',slug:'ancientsrecoveredregisteel',pokemon:[379]},
-{name:'Ancients Recovered Regigigas',slug:'ancientsrecoveredregigigas',pokemon:[486]},
-{name:'Ancients Recovered Regieleki',slug:'ancientsrecoveredregieleki',pokemon:[894]},
-{name:'Ancients Recovered Regidrago',slug:'ancientsrecoveredregidrago',pokemon:[895]},
-{name:'GO Fest 2025 Zamazenta',slug:'gofest2025zamazenta',pokemon:[889]},
-{name:'GO Fest 2025 Zacian',slug:'gofest2025zacian',pokemon:[888]},
-{name:'9th Anniversary',slug:'9thanniversary',pokemon:[999]},
-{name:'Dark Skies',slug:'darkskies',pokemon:[1,3,4,6,7,9,10,12,66,68,92,94,98,99,113,131,138,140,143,144,145,146,213,243,244,245,302,320,374,380,381,519,529,554,568,615,810,812,813,815,816,818,819,821,831,848,849,856,870]},
-{name:'Tales of Transformation',slug:'talesoftransformation',pokemon:[152,158,498,577,638,669]},
-{name:'Pokemon Concierge',slug:'pokemonconcierge',pokemon:[54]},
-{name:'GO Wild Area 2025',slug:'gowildarea2025',pokemon:[249,250,488,491,760,861]},
-{name:'Pokemon Astronomical Observatory',slug:'pokemonastronomicalobservatory',pokemon:[35]},
-{name:'Community Day 2026',slug:'communityday2026',pokemon:[393,810]},
-{name:'GO Tour 2026 Mega',slug:'gotour2026mega',pokemon:[3,6,9,18,71,115,212,214,248,254,257,260,282,359,373,376,380,381,445,448,475,687]},
-{name:'GO Tour 2026 X',slug:'gotour2026x',pokemon:[25,679,716]},
-{name:'GO Tour 2026 Y',slug:'gotour2026y',pokemon:[25,679,717]},
-{name:'GO Tour 2026 Gold',slug:'gotour2026gold',pokemon:[25,250]},
-{name:'GO Tour 2026 Silver',slug:'gotour2026silver',pokemon:[25,249]},
-{name:'GO Tour 2026 Ruby',slug:'gotour2026ruby',pokemon:[25,383]},
-{name:'GO Tour 2026 Sapphire',slug:'gotour2026sapphire',pokemon:[25,382]},
-{name:'GO Tour 2026 Diamond',slug:'gotour2026diamond',pokemon:[25,483]},
-{name:'GO Tour 2026 Pearl',slug:'gotour2026pearl',pokemon:[25,484]},
-{name:'Festival of Colors',slug:'festivalofcolors',pokemon:[25]},
-{name:'Pokemon Pokopia',slug:'pokemonpokopia',pokemon:[131,132,143,149]},
+{name:'GO Tour Las Vegas',slug:'gotourlasvegas',pokemon:[382,383],type:'location'},
+{name:'Air Adventures Jeju Island',slug:'airadventuresjejuisland',pokemon:[380,381],type:'location'},
+{name:'GO Fest Osaka',slug:'gofestosaka',pokemon:[384,488,716,717],type:'location'},
+{name:'GO Fest London',slug:'gofestlondon',pokemon:[384,488,716,717],type:'location'},
+{name:'GO Fest New York City',slug:'gofestnewyorkcity',pokemon:[384,488,716,717],type:'location'},
+{name:'City Safari Seoul',slug:'citysafariseoul',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Barcelona',slug:'citysafaribarcelona',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Mexico City',slug:'citysafarimexicocity',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'GO Tour Los Angeles',slug:'gotourlosangeles',pokemon:[483,484],type:'location'},
+{name:'Air Adventures Bali',slug:'airadventuresbali',pokemon:[380,381],type:'location'},
+{name:'City Safari Tainan',slug:'citysafaritainan',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'Air Adventures Surabaya',slug:'airadventuressurabaya',pokemon:[380,381],type:'location'},
+{name:'GO Fest Sendai',slug:'gofestsendai',pokemon:[791,792,793,796,798,799,800,805],type:'location'},
+{name:'GO Fest Madrid',slug:'gofestmadrid',pokemon:[791,792,793,794,798,799,800,805],type:'location'},
+{name:'GO Fest New York City 2024',slug:'gofestnewyorkcity2024',pokemon:[791,792,793,794,798,799,800,806],type:'location'},
+{name:'2024 Pokemon World Championships',slug:'2024pokemonworldchampionships',pokemon:[25],type:'location'},
+{name:'Air Adventures Yogyakarta',slug:'airadventuresyogyakarta',pokemon:[380,381],type:'location'},
+{name:'MLB Marlins',slug:'mlbmarlins',pokemon:[25],type:'location'},
+{name:'MLB Mariners',slug:'mlbmariners',pokemon:[25],type:'location'},
+{name:'Air Adventures Jakarta',slug:'airadventuresjakarta',pokemon:[380,381],type:'location'},
+{name:'Safari Zone Incheon',slug:'safarizoneincheon',pokemon:[25,672],type:'location'},
+{name:'GO Wild Area Fukuoka',slug:'gowildareafukuoka',pokemon:[483,484,849],type:'location'},
+{name:'City Safari Hong Kong',slug:'citysafarihongkong',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Sao Paulo',slug:'citysafarisaopaulo',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'GO Tour New Taipei City',slug:'gotournewtaipeicity',pokemon:[643,644,646],type:'location'},
+{name:'GO Tour Unova Los Angeles',slug:'gotourunovalosangeles',pokemon:[643,644,646],type:'location'},
+{name:'City Safari Singapore',slug:'citysafarisingapore',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Mumbai',slug:'citysafarimumbai',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Milan',slug:'citysafarimilan',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Santiago',slug:'citysafarisantiago',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'Spring Blossom Festival',slug:'springblossomfestival',pokemon:[25,585],type:'location'},
+{name:'Expo 2025 - Osaka',slug:'expo2025-osaka',pokemon:[25],type:'location'},
+{name:'Expo 2025 - Osaka 2',slug:'expo2025-osaka2',pokemon:[1,4,7],type:'location'},
+{name:'Suita City',slug:'suitacity',pokemon:[25],type:'location'},
+{name:'GO Fest 2025 Osaka',slug:'gofest2025osaka',pokemon:[812,888,889],type:'location'},
+{name:'GO Fest 2025 Jersey City',slug:'gofest2025jerseycity',pokemon:[815,888,889],type:'location'},
+{name:'GO Fest 2025 Paris',slug:'gofest2025paris',pokemon:[4,818,888,889],type:'location'},
+{name:'Lotte Giants',slug:'lottegiants',pokemon:[25],type:'location'},
+{name:'Seattle Mariners',slug:'seattlemariners',pokemon:[25],type:'location'},
+{name:'Road Trip 2025 Manchester',slug:'roadtrip2025manchester',pokemon:[25],type:'location'},
+{name:'Miami Marlins',slug:'miamimarlins',pokemon:[25],type:'location'},
+{name:'Road Trip 2025 London',slug:'roadtrip2025london',pokemon:[25],type:'location'},
+{name:'Tampa Bay Rays',slug:'tampabayrays',pokemon:[25],type:'location'},
+{name:'Milwaukee Brewers',slug:'milwaukeebrewers',pokemon:[25],type:'location'},
+{name:'Road Trip 2025 Paris',slug:'roadtrip2025paris',pokemon:[25],type:'location'},
+{name:'Jangheung Water Festival',slug:'jangheungwaterfestival',pokemon:[25,131,585],type:'location'},
+{name:'Road Trip 2025 Valencia',slug:'roadtrip2025valencia',pokemon:[25],type:'location'},
+{name:'Washington Nationals',slug:'washingtonnationals',pokemon:[25],type:'location'},
+{name:'Road Trip 2025 Berlin',slug:'roadtrip2025berlin',pokemon:[25],type:'location'},
+{name:'Arizona Diamondbacks',slug:'arizonadiamondbacks',pokemon:[25],type:'location'},
+{name:'Chicago White Sox',slug:'chicagowhitesox',pokemon:[25],type:'location'},
+{name:'Baltimore Orioles',slug:'baltimoreorioles',pokemon:[25],type:'location'},
+{name:'Cleveland Guardians',slug:'clevelandguardians',pokemon:[25],type:'location'},
+{name:'2025 Pokemon World Championships',slug:'2025pokemonworldchampionships',pokemon:[25],type:'location'},
+{name:'Road Trip 2025 The Hague',slug:'roadtrip2025thehague',pokemon:[25],type:'location'},
+{name:'Road Trip 2025 Cologne',slug:'roadtrip2025cologne',pokemon:[25],type:'location'},
+{name:'New York Mets',slug:'newyorkmets',pokemon:[25],type:'location'},
+{name:'Boston Red Sox',slug:'bostonredsox',pokemon:[25],type:'location'},
+{name:'San Francisco Giants',slug:'sanfranciscogiants',pokemon:[25],type:'location'},
+{name:'Minnesota Twins',slug:'minnesotatwins',pokemon:[25],type:'location'},
+{name:'Texas Rangers',slug:'texasrangers',pokemon:[25],type:'location'},
+{name:'Mega Evolution Paris',slug:'megaevolutionparis',pokemon:[4],type:'location'},
+{name:'Mega Evolution Paris 2',slug:'megaevolutionparis2',pokemon:[4],type:'location'},
+{name:'City Safari Bangkok',slug:'citysafaribangkok',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Amsterdam',slug:'citysafariamsterdam',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Valencia',slug:'citysafarivalencia',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Cancun',slug:'citysafaricancun',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Vancouver',slug:'citysafarivancouver',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'Pokemon GO at Jeju Island',slug:'pokemongoatjejuisland',pokemon:[25],type:'location'},
+{name:'GO Wild Area Nagasaki',slug:'gowildareanagasaki',pokemon:[488,491,760,861],type:'location'},
+{name:"Taipei Children's Amusement Park",slug:"taipeichildren'samusementpark",pokemon:[131],type:'location'},
+{name:'Busan Fireworks Festival',slug:'busanfireworksfestival',pokemon:[25],type:'location'},
+{name:'PokePark Kanto',slug:'pokeparkkanto',pokemon:[25,144,145,146],type:'location'},
+{name:'Carnival Flamigo Cologne',slug:'carnivalflamigocologne',pokemon:[973],type:'location'},
+{name:'Carnival Flamigo Rio',slug:'carnivalflamigorio',pokemon:[973],type:'location'},
+{name:'GO Tour 2026 Tainan',slug:'gotour2026tainan',pokemon:[6,71,130,181,254,282,334,359,373,445,448,679,686,716,717],type:'location'},
+{name:'GO Tour 2026 Los Angeles',slug:'gotour2026losangeles',pokemon:[6,71,130,181,254,282,334,359,373,445,448,679,686,716,717],type:'location'},
+{name:'Pyeongchang Winter Festival',slug:'pyeongchangwinterfestival',pokemon:[25,585],type:'location'},
+{name:'Car Free Day',slug:'carfreeday',pokemon:[25],type:'location'},
+{name:'City Safari Sydney',slug:'citysafarisydney',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Miami',slug:'citysafarimiami',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'City Safari Buenos Aires',slug:'citysafaribuenosaires',pokemon:[133,134,135,136,196,197,470,471,700],type:'location'},
+{name:'NFL Cardinals',slug:'nflcardinals',pokemon:[25],type:'location'},
+{name:'Pokelid Okinawa',slug:'pokelidokinawa',pokemon:[25],type:'location'},
+{name:'Pokelid Fukuoka',slug:'pokelidfukuoka',pokemon:[25],type:'location'},
+{name:'Pokelid Kagoshima',slug:'pokelidkagoshima',pokemon:[25],type:'location'},
+{name:'Pokelid Miyazaki',slug:'pokelidmiyazaki',pokemon:[25],type:'location'},
+{name:'Pokelid Nagasaki',slug:'pokelidnagasaki',pokemon:[25,181],type:'location'},
+{name:'Pokelid Saga',slug:'pokelidsaga',pokemon:[25],type:'location'},
+{name:'Pokelid Aichi',slug:'pokelidaichi',pokemon:[25],type:'location'},
+{name:'Pokelid Akita',slug:'pokelidakita',pokemon:[25],type:'location'},
+{name:'Pokelid Aomori',slug:'pokelidaomori',pokemon:[25],type:'location'},
+{name:'Pokelid Chiba',slug:'pokelidchiba',pokemon:[25],type:'location'},
+{name:'Pokelid Fukui',slug:'pokelidfukui',pokemon:[25],type:'location'},
+{name:'Pokelid Fukushima',slug:'pokelidfukushima',pokemon:[25],type:'location'},
+{name:'Pokelid Gifu',slug:'pokelidgifu',pokemon:[25],type:'location'},
+{name:'Pokelid Hokkaido',slug:'pokelidhokkaido',pokemon:[25],type:'location'},
+{name:'Pokelid Hyogo',slug:'pokelidhyogo',pokemon:[25],type:'location'},
+{name:'Pokelid Ibaraki',slug:'pokelidibaraki',pokemon:[25],type:'location'},
+{name:'Pokelid Ishikawa',slug:'pokelidishikawa',pokemon:[25],type:'location'},
+{name:'Pokelid Iwate',slug:'pokelidiwate',pokemon:[25],type:'location'},
+{name:'Pokelid Kanagawa',slug:'pokelidkanagawa',pokemon:[25],type:'location'},
+{name:'Pokelid Kyoto',slug:'pokelidkyoto',pokemon:[25],type:'location'},
+{name:'Pokelid Mie',slug:'pokelidmie',pokemon:[25],type:'location'},
+{name:'Pokelid Miyagi',slug:'pokelidmiyagi',pokemon:[25],type:'location'},
+{name:'Pokelid Nara',slug:'pokelidnara',pokemon:[25],type:'location'},
+{name:'Pokelid Niigata',slug:'pokelidniigata',pokemon:[25],type:'location'},
+{name:'Pokelid Osaka',slug:'pokelidosaka',pokemon:[25],type:'location'},
+{name:'Pokelid Saitama',slug:'pokelidsaitama',pokemon:[25],type:'location'},
+{name:'Pokelid Shiga',slug:'pokelidshiga',pokemon:[25],type:'location'},
+{name:'Pokelid Shizuoka',slug:'pokelidshizuoka',pokemon:[25],type:'location'},
+{name:'Pokelid Tochigi',slug:'pokelidtochigi',pokemon:[25],type:'location'},
+{name:'Pokelid Tokyo',slug:'pokelidtokyo',pokemon:[25],type:'location'},
+{name:'Pokelid Toyama',slug:'pokelidtoyama',pokemon:[25],type:'location'},
+{name:'Pokelid Wakayama',slug:'pokelidwakayama',pokemon:[25],type:'location'},
+{name:'Pokelid Ehime',slug:'pokelidehime',pokemon:[25],type:'location'},
+{name:'Pokelid Kagawa',slug:'pokelidkagawa',pokemon:[25],type:'location'},
+{name:'Pokelid Kochi',slug:'pokelidkochi',pokemon:[25],type:'location'},
+{name:'Pokelid Okayama',slug:'pokelidokayama',pokemon:[25],type:'location'},
+{name:'Pokelid Shimane',slug:'pokelidshimane',pokemon:[25],type:'location'},
+{name:'Pokelid Tokushima',slug:'pokelidtokushima',pokemon:[25],type:'location'},
+{name:'Pokelid Tottori',slug:'pokelidtottori',pokemon:[25],type:'location'},
+{name:'Pokelid Yamaguchi',slug:'pokelidyamaguchi',pokemon:[25],type:'location'},
+{name:'GO Fest 2024 Wormhole',slug:'gofest2024wormhole',pokemon:[793,794,795,796,797,798,799,800,805,806],type:'special'},
+{name:'GO Fest 2024 Radiance',slug:'gofest2024radiance',pokemon:[791],type:'special'},
+{name:'GO Fest 2024 Umbra',slug:'gofest2024umbra',pokemon:[792],type:'special'},
+{name:'GO Fest 2024 Wormhole Radiance',slug:'gofest2024wormholeradiance',pokemon:[800],type:'special'},
+{name:'GO Fest 2024 Wormhole Umbra',slug:'gofest2024wormholeumbra',pokemon:[800],type:'special'},
+{name:'Team Valor',slug:'teamvalor',pokemon:[77],type:'special'},
+{name:'Team Instinct',slug:'teaminstinct',pokemon:[239],type:'special'},
+{name:'Team Mystic',slug:'teammystic',pokemon:[131],type:'special'},
+{name:'GO Wild Area 2024',slug:'gowildarea2024',pokemon:[382,383,483,484,849],type:'special'},
+{name:'Community Day 2024',slug:'communityday2024',pokemon:[56,69,77,113,137,155,371,374,540,602,704,722,725,728,761],type:'special'},
+{name:'Dual Destiny',slug:'dualdestiny',pokemon:[280,588,616,906],type:'special'},
+{name:'GO Tour Enigma',slug:'gotourenigma',pokemon:[509,519,525,527,532,535,551,554,555,559,561,595,597,599],type:'special'},
+{name:'GO Tour Unova Black',slug:'gotourunovablack',pokemon:[495,498,501,638,639,640,641,643,644,645,646,649],type:'special'},
+{name:'GO Tour Unova White',slug:'gotourunovawhite',pokemon:[495,498,501,638,639,640,642,643,644,645,646,649],type:'special'},
+{name:'GO Tour Unova Black White',slug:'gotourunovablackwhite',pokemon:[646],type:'special'},
+{name:'Might and Mastery',slug:'mightandmastery',pokemon:[66,158,307,434,582,747,909,921,935],type:'special'},
+{name:'Delightful Days',slug:'delightfuldays',pokemon:[131,133,144,145,782,812,815,818,821,823,912],type:'special'},
+{name:'Ancients Recovered Regirock',slug:'ancientsrecoveredregirock',pokemon:[377],type:'special'},
+{name:'Ancients Recovered Regice',slug:'ancientsrecoveredregice',pokemon:[378],type:'special'},
+{name:'Ancients Recovered Registeel',slug:'ancientsrecoveredregisteel',pokemon:[379],type:'special'},
+{name:'Ancients Recovered Regigigas',slug:'ancientsrecoveredregigigas',pokemon:[486],type:'special'},
+{name:'Ancients Recovered Regieleki',slug:'ancientsrecoveredregieleki',pokemon:[894],type:'special'},
+{name:'Ancients Recovered Regidrago',slug:'ancientsrecoveredregidrago',pokemon:[895],type:'special'},
+{name:'GO Fest 2025 Zamazenta',slug:'gofest2025zamazenta',pokemon:[889],type:'special'},
+{name:'GO Fest 2025 Zacian',slug:'gofest2025zacian',pokemon:[888],type:'special'},
+{name:'9th Anniversary',slug:'9thanniversary',pokemon:[999],type:'special'},
+{name:'Dark Skies',slug:'darkskies',pokemon:[1,3,4,6,7,9,10,12,66,68,92,94,98,99,113,131,138,140,143,144,145,146,213,243,244,245,302,320,374,380,381,519,529,554,568,615,810,812,813,815,816,818,819,821,831,848,849,856,870],type:'special'},
+{name:'Tales of Transformation',slug:'talesoftransformation',pokemon:[152,158,498,577,638,669],type:'special'},
+{name:'Pokemon Concierge',slug:'pokemonconcierge',pokemon:[54],type:'special'},
+{name:'GO Wild Area 2025',slug:'gowildarea2025',pokemon:[249,250,488,491,760,861],type:'special'},
+{name:'Pokemon Astronomical Observatory',slug:'pokemonastronomicalobservatory',pokemon:[35],type:'special'},
+{name:'Community Day 2026',slug:'communityday2026',pokemon:[393,810],type:'special'},
+{name:'GO Tour 2026 Mega',slug:'gotour2026mega',pokemon:[3,6,9,18,71,115,212,214,248,254,257,260,282,359,373,376,380,381,445,448,475,687],type:'special'},
+{name:'GO Tour 2026 X',slug:'gotour2026x',pokemon:[25,679,716],type:'special'},
+{name:'GO Tour 2026 Y',slug:'gotour2026y',pokemon:[25,679,717],type:'special'},
+{name:'GO Tour 2026 Gold',slug:'gotour2026gold',pokemon:[25,250],type:'special'},
+{name:'GO Tour 2026 Silver',slug:'gotour2026silver',pokemon:[25,249],type:'special'},
+{name:'GO Tour 2026 Ruby',slug:'gotour2026ruby',pokemon:[25,383],type:'special'},
+{name:'GO Tour 2026 Sapphire',slug:'gotour2026sapphire',pokemon:[25,382],type:'special'},
+{name:'GO Tour 2026 Diamond',slug:'gotour2026diamond',pokemon:[25,483],type:'special'},
+{name:'GO Tour 2026 Pearl',slug:'gotour2026pearl',pokemon:[25,484],type:'special'},
+{name:'Festival of Colors',slug:'festivalofcolors',pokemon:[25],type:'special'},
+{name:'Pokemon Pokopia',slug:'pokemonpokopia',pokemon:[131,132,143,149],type:'special'},
 ];
 
-// Build lookup: pokemonId → [{name, slug}]
+// Build lookup: pokemonId → [{name, slug, type}]
 const BG_MAP = new Map();
 for (const bg of BACKGROUNDS) {
   for (const pid of bg.pokemon) {
     if (!BG_MAP.has(pid)) BG_MAP.set(pid, []);
-    BG_MAP.get(pid).push({ name: bg.name, slug: bg.slug });
+    BG_MAP.get(pid).push({ name: bg.name, slug: bg.slug, type: bg.type });
   }
 }
 const BG_POKEMON = new Set(BG_MAP.keys());
@@ -1720,6 +1753,8 @@ async function fetchCostumeMap() {
       { id: 216, key: '.cFALL_2025', hasShiny: true },
       { id: 217, key: '.cFALL_2025', hasShiny: true },
       { id: 901, key: '.cFALL_2025', hasShiny: true },
+      { id: 132, key: '.cPOKOPIA_HAT', hasShiny: true },
+      { id: 132, key: '.cPOKOPIA_CAP', hasShiny: true },
     ];
     for (const mc of MANUAL_COSTUMES) {
       const existing = costumeMap.get(mc.id) || [];
@@ -1753,6 +1788,7 @@ async function fetchPokemon() {
     const data = await res.json();
     const POKE_NAME_OVERRIDE = { 29: 'nidoran\u2640', 32: 'nidoran\u2642', 386: 'deoxys', 487: 'giratina', 492: 'shaymin', 550: 'basculin', 641: 'tornadus', 642: 'thundurus', 645: 'landorus', 647: 'keldeo', 648: 'meloetta', 668: 'pyroar', 678: 'meowstic', 681: 'aegislash', 710: 'pumpkaboo', 711: 'gourgeist', 718: 'zygarde', 741: 'oricorio', 745: 'lycanroc', 746: 'wishiwashi', 774: 'minior', 778: 'mimikyu', 849: 'toxtricity', 875: 'eiscue', 876: 'indeedee', 877: 'morpeko', 892: 'urshifu', 902: 'basculegion', 905: 'enamorus', 916: 'oinkologne', 925: 'maushold', 978: 'tatsugiri' };
     state.all = data.results.map((p, i) => ({ id: i + 1, name: POKE_NAME_OVERRIDE[i + 1] || p.name }));
+    await exclusiveMovesReady;
     loadLocalCache();
     applyFilter();
     loadFromURL();
@@ -2087,7 +2123,7 @@ function toggleShiny(list, idx) {
   const entry = state[list][idx];
   if (entry) {
     entry.shiny = !entry.shiny;
-    renderList(list);
+    updateCard(list, idx);
     scheduleAutoSave();
   }
 }
@@ -2100,7 +2136,7 @@ function togglePurified(list, idx) {
       entry.dynamax = false;
       if (entry.bg && !canPurifyWithBg(entry.id, entry.bg)) entry.bg = '';
     }
-    renderList(list);
+    updateCard(list, idx);
     scheduleAutoSave();
   }
 }
@@ -2117,7 +2153,7 @@ function toggleDynamax(list, idx) {
       entry.purified = false;
       if (entry.bg && entry.bg !== 'darkskies') entry.bg = '';
     }
-    renderList(list);
+    updateCard(list, idx);
     scheduleAutoSave();
   }
 }
@@ -2125,7 +2161,7 @@ function toggleDynamax(list, idx) {
 const CITY_SAFARI_SLUGS = new Set(['citysafaribangkok','citysafariamsterdam','citysafarivalencia','citysafaricancun','citysafarivancouver','citysafarisingapore','citysafarimumbai','citysafarimilan','citysafarisantiago','citysafarisydney','citysafarimiami','citysafaribuenosaires','citysafariseoul','citysafaribarcelona','citysafarimexicocity','citysafaritainan','citysafarihongkong','citysafarisaopaulo']);
 const BG_FORM_RESTRICT = {'.fJEJU': ['pokemongoatjejuisland'], '.cMAY_2023': [...CITY_SAFARI_SLUGS]};
 // Backgrounds that should ONLY appear for specific costume forms
-const BG_SLUG_FORM_ONLY = new Map([...CITY_SAFARI_SLUGS].map(s => [s, '.cMAY_2023']));
+const BG_SLUG_FORM_ONLY = new Map([...[...CITY_SAFARI_SLUGS].map(s => [s, '.cMAY_2023']), ['pokemongoatjejuisland', '.fJEJU']]);
 function toggleBg(list, idx) {
   const entry = state[list][idx];
   if (!entry) return;
@@ -2175,10 +2211,12 @@ function closeSizeModal() {
 function setSize(size) {
   if (!sizeState) return;
   const list = sizeState.list;
-  const entry = state[list][sizeState.idx];
+  const idx = sizeState.idx;
+  const entry = state[list][idx];
+  if (!entry) { closeSizeModal(); return; }
   entry.size = entry.size === size ? '' : size;
   closeSizeModal();
-  renderList(list);
+  updateCard(list, idx);
   scheduleAutoSave();
 }
 
@@ -2218,6 +2256,7 @@ function openEtmModal(list, idx) {
   etmBody.innerHTML = html;
   etmBody.querySelectorAll('.etm-move').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (!etmState || state[list][etmState.idx] !== entry) { closeEtmModal(); return; }
       const move = btn.dataset.move;
       const type = btn.dataset.type;
       if (!entry.etm) entry.etm = [];
@@ -2233,7 +2272,7 @@ function openEtmModal(list, idx) {
         entry.etm.push(move);
         btn.classList.add('selected');
       }
-      renderList(list);
+      updateCard(list, etmState.idx);
       scheduleAutoSave();
     });
   });
@@ -2273,14 +2312,15 @@ function openCardDetail(p) {
   } else {
     html += `<img class="pokemon-sprite" src="${spriteUrl(p.id, form, p.shiny)}" alt="${escapeHtml(p.name)}" width="180" height="180">`;
   }
-  html += `<div class="cd-name">${escapeHtml(capName)}${p.size ? ` <span class="cd-size">${p.size}</span>` : ''}</div>`;
+  html += `<div class="cd-name">${escapeHtml(capName)}</div>`;
   if (formLabel) html += `<div class="cd-form">${escapeHtml(formLabel)}</div>`;
 
-  // Indicators row (purified + shiny)
+  // Indicators row: Size, Shiny, ETM, Purified
   const indicators = [];
-  if (p.purified) indicators.push('<img src="Resources/purified.png?v=2" alt="Purified" title="Purified" style="width:24px;height:24px">');
-  if (p.shiny) indicators.push('<span style="font-size:1.4rem;width:26px;height:26px;color:#FFD700;filter:drop-shadow(0 0 2px rgba(255,215,0,0.6))" title="Shiny">&#10024;</span>');
-  if (p.etm && p.etm.length > 0) indicators.push(`<img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM" title="${escapeHtml(p.etm.join(', '))}" style="width:28px;height:28px">`);
+  if (p.size) indicators.push(`<span class="cd-size">${p.size}</span>`);
+  if (p.shiny) indicators.push('<img src="Resources/shiny.png?v=1" alt="Shiny" title="Shiny">');
+  if (p.etm && p.etm.length > 0) indicators.push(`<img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM" title="${escapeHtml(p.etm.join(', '))}">`);
+  if (p.purified) indicators.push('<img src="Resources/purified.png?v=3" alt="Purified" title="Purified">');
   if (indicators.length > 0) html += `<div class="cd-indicators">${indicators.join('')}</div>`;
 
   // Moves
@@ -2343,13 +2383,23 @@ function openBgPicker(list, idx, available) {
 function renderBgPickerGrid(available, currentSlug, filter) {
   bgPickerGrid.innerHTML = '';
   const lf = filter.toLowerCase();
-  for (const bg of available) {
-    if (lf && !bg.name.toLowerCase().includes(lf)) continue;
-    const card = document.createElement('div');
-    card.className = `bp-card${bg.slug === currentSlug ? ' selected' : ''}`;
-    card.innerHTML = `<img src="${BG_SLUG_URL(bg.slug)}" alt="${escapeHtml(bg.name)}" loading="lazy"><div class="bp-name" title="${escapeHtml(bg.name)}">${escapeHtml(bg.name)}</div>`;
-    card.addEventListener('click', () => selectBg(bg.slug));
-    bgPickerGrid.appendChild(card);
+  const special = available.filter(bg => bg.type === 'special' && (!lf || bg.name.toLowerCase().includes(lf)));
+  const location = available.filter(bg => bg.type === 'location' && (!lf || bg.name.toLowerCase().includes(lf)));
+  const sections = [];
+  if (special.length) sections.push({ label: 'Special Backgrounds', items: special });
+  if (location.length) sections.push({ label: 'Location Backgrounds', items: location });
+  for (const section of sections) {
+    const header = document.createElement('div');
+    header.className = 'bp-section-header';
+    header.textContent = section.label;
+    bgPickerGrid.appendChild(header);
+    for (const bg of section.items) {
+      const card = document.createElement('div');
+      card.className = `bp-card${bg.slug === currentSlug ? ' selected' : ''}`;
+      card.innerHTML = `<img src="${BG_SLUG_URL(bg.slug)}" alt="${escapeHtml(bg.name)}" loading="lazy"><div class="bp-name" title="${escapeHtml(bg.name)}">${escapeHtml(bg.name)}</div>`;
+      card.addEventListener('click', () => selectBg(bg.slug));
+      bgPickerGrid.appendChild(card);
+    }
   }
 }
 
@@ -2361,7 +2411,7 @@ function selectBg(slug) {
     entry.bg = slug;
     if (slug && slug !== 'darkskies') entry.dynamax = false;
     if (slug && entry.purified && !canPurifyWithBg(entry.id, slug)) entry.purified = false;
-    renderList(list);
+    updateCard(list, idx);
     scheduleAutoSave();
   }
   closeBgPicker();
@@ -2387,7 +2437,7 @@ bgPickerRemove.addEventListener('click', () => {
   const entry = state[list] && state[list][idx];
   if (entry) {
     entry.bg = '';
-    renderList(list);
+    updateCard(list, idx);
     scheduleAutoSave();
   }
   closeBgPicker();
@@ -2401,6 +2451,87 @@ function clearList(list) {
 }
 
 const BG_COSTUME_EXCEPTIONS = new Set(['.fJEJU', '.cMAY_2023']);
+
+function createCard(list, idx) {
+  const p = state[list][idx];
+  const form      = p.form || '';
+  const formLabel = form ? formatFormLabel(form, p.id) : '';
+  const card = document.createElement('div');
+  const showClouds = p.dynamax || isGigantamax(form);
+  card.className = `list-card${p.shiny ? ' shiny' : ''}${p.purified ? ' purified' : ''}${showClouds ? ' dynamax' : ''}${isGigantamax(form) ? ' gigantamax' : ''}${p.bg ? ' has-bg' : ''}`;
+  card.style.setProperty('--card-bg', cardBg(p.id));
+  const isCostume = form.startsWith('.c') || form.includes('.c') || !!PIKACHU_LABELS[form];
+  const isGmax = isGigantamax(form);
+  const bgAvail = BG_MAP.get(p.id);
+  const hasDarkSkies = bgAvail && bgAvail.some(bg => bg.slug === 'darkskies');
+  const hasBg = isGmax ? hasDarkSkies : (BG_POKEMON.has(p.id) && (!isCostume || BG_COSTUME_EXCEPTIONS.has(form)));
+  const hasDynamax = !isGigantamax(form) && DYNAMAX_POKEMON.has(p.id);
+  const formId = `${p.id}${form}`;
+  const canPurify = !isGigantamax(form) && SHADOW_POKEMON.has(p.id) && !NO_PURIFY_FORMS.has(formId) && (!form || !form.includes('.c') || SHADOW_COSTUMES.has(formId));
+  const hasEtm = !!getExclusiveMoves(p.id, form);
+  const etmActive = p.etm && p.etm.length > 0;
+  card.innerHTML = `
+    ${p.bg ? `<span class="bg-badge"><img src="${BG_SLUG_URL(p.bg)}" alt=""></span>` : ''}
+    ${showClouds ? `<div class="sprite-wrap"><div class="cloud-overlay"></div><img class="pokemon-sprite" src="${spriteUrl(p.id, form, p.shiny)}" alt="${escapeHtml(p.name)}" width="96" height="96"></div>` : `<img class="pokemon-sprite" src="${spriteUrl(p.id, form, p.shiny)}" alt="${escapeHtml(p.name)}" width="96" height="96">`}
+    <div class="card-label-area">
+      <div class="pname">${escapeHtml(p.name)}</div>
+      ${formLabel ? `<div class="form-badge">${escapeHtml(formLabel)}</div>` : ''}
+    </div>
+    ${canPurify ? `<button class="purified-btn${p.purified ? ' active' : ''}" title="Purified"><img src="Resources/purified.png?v=3" alt="Purified"></button>` : ''}
+    ${!NO_SHINY_FORMS.has(formId) ? `<button class="shiny-btn${p.shiny ? ' active' : ''}" title="${p.shiny ? 'Remove shiny' : 'Mark shiny'}"><img src="Resources/shiny.png?v=1" alt="Shiny"></button>` : ''}
+    ${hasDynamax ? `<button class="dynamax-btn${p.dynamax ? ' active' : ''}" title="${p.dynamax ? 'Remove Dynamax' : 'Mark Dynamax'}">&#9729;</button>` : ''}
+    <button class="size-btn${p.size ? ' active' : ''}" title="Size (XXS/XXL)">${p.size ? p.size : '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M1 23L23 1v22H1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M7 23l0-4M11 23l0-8M15 23l0-4M19 23l0-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'}</button>
+    ${hasEtm ? `<button class="etm-btn${etmActive ? ' active' : ''}" title="Exclusive moves"><img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM"></button>` : ''}
+    ${p.size ? `<span class="size-indicator" title="${p.size}">${p.size}</span>` : ''}
+    ${p.purified ? `<span class="purified-indicator" title="Purified"><img src="Resources/purified.png?v=3" alt="Purified"></span>` : ''}
+    ${p.shiny ? `<span class="shiny-indicator" title="Shiny"><img src="Resources/shiny.png?v=1" alt="Shiny"></span>` : ''}
+    ${etmActive ? `<span class="etm-indicator" title="${escapeHtml(p.etm.join(', '))}"><img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM"></span>` : ''}
+    ${hasBg ? `<button class="bg-btn${p.bg ? ' active' : ''}" title="Select background"><img src="Resources/${p.bg && bgAvail && bgAvail.find(b => b.slug === p.bg && b.type === 'location') ? 'LBG' : 'BG'}.png?v=1" alt="BG"></button>` : ''}
+    <button class="remove-btn" title="Remove">&#10005;</button>
+  `;
+  spriteWithFallback(card.querySelector('.sprite-wrap img, img.pokemon-sprite'), p.id, p.shiny);
+  const purBtn = card.querySelector('.purified-btn');
+  if (purBtn) purBtn.addEventListener('click', () => togglePurified(list, idx));
+  const shinyBtn = card.querySelector('.shiny-btn');
+  if (shinyBtn) shinyBtn.addEventListener('click', () => toggleShiny(list, idx));
+  const dynBtn = card.querySelector('.dynamax-btn');
+  if (dynBtn) dynBtn.addEventListener('click', () => toggleDynamax(list, idx));
+  const sizeBtn = card.querySelector('.size-btn');
+  if (sizeBtn) sizeBtn.addEventListener('click', () => openSizeModal(list, idx));
+  const etmBtn = card.querySelector('.etm-btn');
+  if (etmBtn) etmBtn.addEventListener('click', () => openEtmModal(list, idx));
+  const bgBtn = card.querySelector('.bg-btn');
+  if (bgBtn) bgBtn.addEventListener('click', () => toggleBg(list, idx));
+  card.querySelector('.remove-btn').addEventListener('click', () => removeFromList(list, idx));
+  if (!viewMode) {
+    card.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      if (e.target.closest('button')) return;
+      if (viewMode) return;
+      const dest = list === 'wanted' ? 'trade' : 'wanted';
+      state[dest].push({ ...p });
+      state[list].splice(idx, 1);
+      renderList(list);
+      renderList(dest);
+      updatePickerHighlights();
+      scheduleAutoSave();
+    });
+  }
+  card.addEventListener('click', e => {
+    if (!viewMode) return;
+    if (e.target.closest('button')) return;
+    openCardDetail(p);
+  });
+  attachCardSwipe(card, list, idx);
+  return card;
+}
+
+function updateCard(list, idx) {
+  const grid = document.getElementById(`${list}-grid`);
+  const oldCard = grid.children[idx];
+  if (!oldCard || !oldCard.classList.contains('list-card')) return;
+  oldCard.replaceWith(createCard(list, idx));
+}
 
 function renderList(list) {
   const grid  = document.getElementById(`${list}-grid`);
@@ -2418,77 +2549,7 @@ function renderList(list) {
 
   grid.innerHTML = '';
   for (let i = 0; i < arr.length; i++) {
-    const p = arr[i];
-    const form      = p.form || '';
-    const formLabel = form ? formatFormLabel(form, p.id) : '';
-    const card = document.createElement('div');
-    const showClouds = p.dynamax || isGigantamax(form);
-    card.className = `list-card${p.shiny ? ' shiny' : ''}${p.purified ? ' purified' : ''}${showClouds ? ' dynamax' : ''}${isGigantamax(form) ? ' gigantamax' : ''}${p.bg ? ' has-bg' : ''}`;
-    card.style.background = cardBg(p.id);
-    const isCostume = form.startsWith('.c') || form.includes('.c') || !!PIKACHU_LABELS[form];
-    const isGmax = isGigantamax(form);
-    const bgAvail = BG_MAP.get(p.id);
-    const hasDarkSkies = bgAvail && bgAvail.some(bg => bg.slug === 'darkskies');
-    const hasBg = isGmax ? hasDarkSkies : (BG_POKEMON.has(p.id) && (!isCostume || BG_COSTUME_EXCEPTIONS.has(form)));
-    const hasDynamax = !isGigantamax(form) && DYNAMAX_POKEMON.has(p.id);
-    const formId = `${p.id}${form}`;
-    const canPurify = !isGigantamax(form) && SHADOW_POKEMON.has(p.id) && !NO_PURIFY_FORMS.has(formId) && (!form || !form.startsWith('.c') || SHADOW_COSTUMES.has(formId));
-    const hasEtm = !!getExclusiveMoves(p.id, form);
-    const etmActive = p.etm && p.etm.length > 0;
-    card.innerHTML = `
-      ${p.bg ? `<span class="bg-badge"><img src="${BG_SLUG_URL(p.bg)}" alt=""></span>` : ''}
-      ${showClouds ? `<div class="sprite-wrap"><div class="cloud-overlay"></div><img class="pokemon-sprite" src="${spriteUrl(p.id, form, p.shiny)}" alt="${escapeHtml(p.name)}" width="96" height="96"></div>` : `<img class="pokemon-sprite" src="${spriteUrl(p.id, form, p.shiny)}" alt="${escapeHtml(p.name)}" width="96" height="96">`}
-      <div class="card-label-area">
-        <div class="pname">${escapeHtml(p.name)}</div>
-        ${formLabel ? `<div class="form-badge">${escapeHtml(formLabel)}</div>` : ''}
-      </div>
-      ${canPurify ? `<button class="purified-btn${p.purified ? ' active' : ''}" title="Purified"><img src="Resources/purified.png?v=2" alt="Purified"></button>` : ''}
-      ${!NO_SHINY_FORMS.has(formId) ? `<button class="shiny-btn${p.shiny ? ' active' : ''}" title="${p.shiny ? 'Remove shiny' : 'Mark shiny'}">&#10024;</button>` : ''}
-      ${hasDynamax ? `<button class="dynamax-btn${p.dynamax ? ' active' : ''}" title="${p.dynamax ? 'Remove Dynamax' : 'Mark Dynamax'}">&#9729;</button>` : ''}
-      <button class="size-btn${p.size ? ' active' : ''}" title="Size (XXS/XXL)">${p.size ? p.size : '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M1 23L23 1v22H1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M7 23l0-4M11 23l0-8M15 23l0-4M19 23l0-8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'}</button>
-      ${hasEtm ? `<button class="etm-btn${etmActive ? ' active' : ''}" title="Exclusive moves"><img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM"></button>` : ''}
-      ${p.size ? `<span class="size-indicator" title="${p.size}">${p.size}</span>` : ''}
-      ${p.purified ? `<span class="purified-indicator" title="Purified"><img src="Resources/purified.png?v=2" alt="Purified"></span>` : ''}
-      ${p.shiny ? `<span class="shiny-indicator" title="Shiny">&#10024;</span>` : ''}
-      ${etmActive ? `<span class="etm-indicator" title="${escapeHtml(p.etm.join(', '))}"><img src="Resources/GO_Elite_Charged_TM.png" alt="Elite TM"></span>` : ''}
-      ${hasBg ? `<button class="bg-btn${p.bg ? ' active' : ''}" title="Select background"><span class="bg-icon"></span></button>` : ''}
-      <button class="remove-btn" title="Remove">&#10005;</button>
-    `;
-    spriteWithFallback(card.querySelector('.sprite-wrap img, img.pokemon-sprite'), p.id, p.shiny);
-    const idx = i;
-    const purBtn = card.querySelector('.purified-btn');
-    if (purBtn) purBtn.addEventListener('click', () => togglePurified(list, idx));
-    const shinyBtn = card.querySelector('.shiny-btn');
-    if (shinyBtn) shinyBtn.addEventListener('click', () => toggleShiny(list, idx));
-    const dynBtn = card.querySelector('.dynamax-btn');
-    if (dynBtn) dynBtn.addEventListener('click', () => toggleDynamax(list, idx));
-    const sizeBtn = card.querySelector('.size-btn');
-    if (sizeBtn) sizeBtn.addEventListener('click', () => openSizeModal(list, idx));
-    const etmBtn = card.querySelector('.etm-btn');
-    if (etmBtn) etmBtn.addEventListener('click', () => openEtmModal(list, idx));
-    const bgBtn = card.querySelector('.bg-btn');
-    if (bgBtn) bgBtn.addEventListener('click', () => toggleBg(list, idx));
-    card.querySelector('.remove-btn').addEventListener('click', () => removeFromList(list, idx));
-    if (!viewMode) {
-      card.addEventListener('dblclick', e => {
-        e.stopPropagation();
-        if (e.target.closest('button')) return;
-        if (viewMode) return;
-        const dest = list === 'wanted' ? 'trade' : 'wanted';
-        state[dest].push({ ...p });
-        state[list].splice(idx, 1);
-        renderList(list);
-        renderList(dest);
-        updatePickerHighlights();
-        scheduleAutoSave();
-      });
-    }
-    card.addEventListener('click', e => {
-      if (!viewMode) return;
-      if (e.target.closest('button')) return;
-      openCardDetail(p);
-    });
-    grid.appendChild(card);
+    grid.appendChild(createCard(list, i));
   }
 
   const section = document.getElementById(`${list}-section`);
@@ -2762,7 +2823,191 @@ renderList('trade');
 fetchPokemon();
 fetchTypeMap();       // runs in background, re-renders with type colors when ready
 fetchCostumeMap();    // runs in background, populates costumeMap
-fetchExclusiveMoves(); // loads exclusive move data for ETM button
+// fetchExclusiveMoves started eagerly above; awaited inside fetchPokemon before decoding lists
+
+// ─────────────────────────────────────────────
+// Mobile card swipe gestures & card actions modal
+// ─────────────────────────────────────────────
+const caOverlay = document.getElementById('card-actions-overlay');
+const caModal   = document.getElementById('card-actions-modal');
+const caTitle   = document.getElementById('ca-title');
+let caState = null; // { list, idx }
+
+function openCardActions(list, idx) {
+  const entry = state[list][idx];
+  if (!entry) return;
+  caState = { list, idx };
+  const cap = entry.name.charAt(0).toUpperCase() + entry.name.slice(1);
+  caTitle.textContent = cap;
+
+  const form = entry.form || '';
+  const formId = `${entry.id}${form}`;
+  const canPurify = !isGigantamax(form) && SHADOW_POKEMON.has(entry.id) && !NO_PURIFY_FORMS.has(formId) && (!form || !form.includes('.c') || SHADOW_COSTUMES.has(formId));
+  const hasDynamax = !isGigantamax(form) && DYNAMAX_POKEMON.has(entry.id);
+  const noShiny = NO_SHINY_FORMS.has(formId);
+
+  const shinyBtn = document.getElementById('ca-shiny');
+  const purBtn   = document.getElementById('ca-purified');
+  const dynBtn   = document.getElementById('ca-dynamax');
+  const xxlBtn   = document.getElementById('ca-xxl');
+  const xxsBtn   = document.getElementById('ca-xxs');
+
+  shinyBtn.classList.toggle('hidden', noShiny);
+  shinyBtn.classList.toggle('active', !!entry.shiny);
+  purBtn.classList.toggle('hidden', !canPurify);
+  purBtn.classList.toggle('active', !!entry.purified);
+  dynBtn.classList.toggle('hidden', !hasDynamax);
+  dynBtn.classList.toggle('active', !!entry.dynamax);
+  xxlBtn.classList.toggle('active', entry.size === 'XXL');
+  xxsBtn.classList.toggle('active', entry.size === 'XXS');
+
+  caOverlay.classList.add('open');
+  caModal.classList.add('open');
+}
+
+function closeCardActions() {
+  caOverlay.classList.remove('open');
+  caModal.classList.remove('open');
+  caState = null;
+}
+
+if (caOverlay) caOverlay.addEventListener('click', closeCardActions);
+document.getElementById('ca-close').addEventListener('click', closeCardActions);
+
+document.getElementById('ca-shiny').addEventListener('click', () => {
+  if (!caState) return;
+  toggleShiny(caState.list, caState.idx);
+  const entry = state[caState.list][caState.idx];
+  document.getElementById('ca-shiny').classList.toggle('active', !!entry.shiny);
+});
+document.getElementById('ca-purified').addEventListener('click', () => {
+  if (!caState) return;
+  togglePurified(caState.list, caState.idx);
+  const entry = state[caState.list][caState.idx];
+  document.getElementById('ca-purified').classList.toggle('active', !!entry.purified);
+  document.getElementById('ca-dynamax').classList.toggle('active', !!entry.dynamax);
+});
+document.getElementById('ca-dynamax').addEventListener('click', () => {
+  if (!caState) return;
+  toggleDynamax(caState.list, caState.idx);
+  const entry = state[caState.list][caState.idx];
+  document.getElementById('ca-dynamax').classList.toggle('active', !!entry.dynamax);
+  document.getElementById('ca-purified').classList.toggle('active', !!entry.purified);
+});
+document.getElementById('ca-xxl').addEventListener('click', () => {
+  if (!caState) return;
+  const entry = state[caState.list][caState.idx];
+  entry.size = entry.size === 'XXL' ? '' : 'XXL';
+  updateCard(caState.list, caState.idx);
+  scheduleAutoSave();
+  document.getElementById('ca-xxl').classList.toggle('active', entry.size === 'XXL');
+  document.getElementById('ca-xxs').classList.toggle('active', entry.size === 'XXS');
+});
+document.getElementById('ca-xxs').addEventListener('click', () => {
+  if (!caState) return;
+  const entry = state[caState.list][caState.idx];
+  entry.size = entry.size === 'XXS' ? '' : 'XXS';
+  updateCard(caState.list, caState.idx);
+  scheduleAutoSave();
+  document.getElementById('ca-xxs').classList.toggle('active', entry.size === 'XXS');
+  document.getElementById('ca-xxl').classList.toggle('active', entry.size === 'XXL');
+});
+
+function attachCardSwipe(card, list, idx) {
+  if (window.innerWidth > 600) return;
+  const THRESHOLD = 40;
+  let startX, startY, direction = null, swiping = false, hintEl = null;
+
+  card.addEventListener('touchstart', e => {
+    if (viewMode) return;
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY;
+    direction = null; swiping = false;
+    card.querySelectorAll('.card-swipe-hint').forEach(h => h.remove());
+    hintEl = null;
+  }, { passive: true });
+
+  card.addEventListener('touchmove', e => {
+    if (viewMode || startX == null) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+
+    if (!swiping) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      direction = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
+      swiping = true;
+    }
+
+    e.preventDefault();
+    card.classList.add('swiping');
+
+    const dist = direction === 'left' || direction === 'right' ? dx : dy;
+    if (direction === 'left' || direction === 'right') {
+      card.style.transform = `translateX(${dist * 0.4}px)`;
+    } else {
+      card.style.transform = `translateY(${dist * 0.4}px)`;
+    }
+    card.style.opacity = Math.max(0.4, 1 - Math.abs(dist) / 200);
+
+    if (!hintEl) {
+      hintEl = document.createElement('div');
+      hintEl.className = 'card-swipe-hint';
+      card.appendChild(hintEl);
+    }
+
+    const active = Math.abs(dist) > THRESHOLD;
+    if (direction === 'down') {
+      hintEl.className = `card-swipe-hint hint-down${active ? ' show' : ''}`;
+      hintEl.textContent = 'REMOVE';
+    } else if (direction === 'left') {
+      hintEl.className = `card-swipe-hint hint-left${active ? ' show' : ''}`;
+      hintEl.textContent = 'MOVES';
+    } else if (direction === 'right') {
+      hintEl.className = `card-swipe-hint hint-right${active ? ' show' : ''}`;
+      hintEl.textContent = 'BACKGROUND';
+    } else if (direction === 'up') {
+      hintEl.className = `card-swipe-hint hint-up${active ? ' show' : ''}`;
+      hintEl.textContent = 'OPTIONS';
+    }
+  }, { passive: false });
+
+  card.addEventListener('touchend', e => {
+    if (viewMode || !swiping) { startX = null; hintEl = null; return; }
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    card.classList.remove('swiping');
+    card.style.transform = '';
+    card.style.opacity = '';
+    if (hintEl) { hintEl.remove(); hintEl = null; }
+
+    const dist = direction === 'left' || direction === 'right' ? dx : dy;
+    if (Math.abs(dist) >= THRESHOLD) {
+      if (direction === 'down') {
+        removeFromList(list, idx);
+      } else if (direction === 'left') {
+        const entry = state[list][idx];
+        if (entry) {
+          const hasEtm = !!getExclusiveMoves(entry.id, entry.form);
+          if (hasEtm) openEtmModal(list, idx);
+        }
+      } else if (direction === 'right') {
+        if (state[list][idx]) toggleBg(list, idx);
+      } else if (direction === 'up') {
+        openCardActions(list, idx);
+      }
+    }
+    startX = null; direction = null;
+  }, { passive: true });
+
+  card.addEventListener('touchcancel', () => {
+    card.classList.remove('swiping');
+    card.style.transform = '';
+    card.style.opacity = '';
+    if (hintEl) { hintEl.remove(); hintEl = null; }
+    startX = null; direction = null;
+  }, { passive: true });
+}
 
 // ─────────────────────────────────────────────
 // Mobile swipe-to-add on form thumbnails
@@ -2863,7 +3108,7 @@ function attachFormSwipe(thumb, formKey) {
   let touchStartX = null;
   let lastTabIdx = 0;
   panels.addEventListener('touchstart', e => {
-    touchStartX = e.touches[0].clientX;
+    touchStartX = e.target.closest('.list-card') ? null : e.touches[0].clientX;
   }, { passive: true });
 
   panels.addEventListener('touchend', e => {
@@ -2947,7 +3192,7 @@ function attachFormSwipe(thumb, formKey) {
   let expanded = false;
 
   function fixHeights() {
-    if (window.innerWidth > 600 || document.body.classList.contains('view-mode')) {
+    if (document.body.classList.contains('view-mode') || window.innerWidth > 600) {
       panels.style.height = '';
       sections.forEach(s => s.style.height = '');
       return;
